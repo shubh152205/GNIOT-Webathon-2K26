@@ -1,5 +1,5 @@
 // ============================================================
-// NGO-ID #WB303 — AashaDaan Foundation — Main Application
+// NGO-ID #WB303 — KalNahiAajDaan Foundation — Main Application
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
             items.push(`💚 ${d.name} donated ₹${d.amount.toLocaleString('en-IN')} to ${d.campaign}`);
         });
 
-        if (items.length === 0) items.push('Welcome to AashaDaan Foundation!');
+        if (items.length === 0) items.push('Welcome to KalNahiAajDaan Foundation!');
 
         track.innerHTML = `<div class="ticker-content">${items.map(t => `<span>${t}</span>`).join('')}</div>`;
     }

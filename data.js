@@ -1,5 +1,5 @@
 // ============================================================
-// NGO-ID #WB303 — AashaDaan Foundation — Seed Data
+// NGO-ID #WB303 — KalNahiAajDaan Foundation — Seed Data
 // ============================================================
 
 const CAMPAIGNS = [
@@ -11,7 +11,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 5000000,
         raised: 3200000,
-        image: 'url("images/img3.jpeg")',
+        image: "url('images/img3.jpeg')",
         donors: 148,
         daysLeft: 45
     },
@@ -23,7 +23,7 @@ const CAMPAIGNS = [
         status: 'urgent',
         goal: 8000000,
         raised: 1950000,
-        image: 'url("images/img2.jpeg")',
+        image: "url('images/img2.jpeg')",
         donors: 87,
         daysLeft: 12
     },
@@ -35,7 +35,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 3000000,
         raised: 2750000,
-        image: 'url("images/img6.jpeg")',
+        image: "url('images/img6.jpeg')",
         donors: 203,
         daysLeft: 20
     },
@@ -47,7 +47,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 2500000,
         raised: 1800000,
-        image: 'url("images/img5.jpeg")',
+        image: "url('images/img5.jpeg')",
         donors: 312,
         daysLeft: 60
     },
@@ -59,7 +59,7 @@ const CAMPAIGNS = [
         status: 'completed',
         goal: 4000000,
         raised: 4000000,
-        image: 'url("images/img1.jpeg")',
+        image: "url('images/img1.jpeg')",
         donors: 256,
         daysLeft: 0
     },
@@ -71,7 +71,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 3500000,
         raised: 1200000,
-        image: 'url("images/img4.jpeg")',
+        image: "url('images/img4.jpeg')",
         donors: 95,
         daysLeft: 75
     }
@@ -97,7 +97,7 @@ const STORIES = [
         id: 's1',
         title: 'From Darkness to Light',
         subtitle: "Ravi's Education Journey",
-        narrative: 'Ravi, a 12-year-old from a remote village in Bihar, walked 8 km every day to reach the nearest school. With AashaDaan\'s Rural School Initiative, a new school was built just 1 km from his village. Today, Ravi dreams of becoming an engineer.',
+        narrative: 'Ravi, a 12-year-old from a remote village in Bihar, walked 8 km every day to reach the nearest school. With KalNahiAajDaan\'s Rural School Initiative, a new school was built just 1 km from his village. Today, Ravi dreams of becoming an engineer.',
         quote: '"I never thought I could study in a real classroom with a real blackboard. Now I have a computer too!"',
         quotee: '— Ravi Kumar, Student',
         stats: [
@@ -112,7 +112,7 @@ const STORIES = [
         id: 's2',
         title: 'Water is Life',
         subtitle: 'Sundarpur Village Transformation',
-        narrative: 'The women of Sundarpur used to walk 3 hours daily to fetch water from a distant well. After AashaDaan installed a solar-powered purification plant, the village now has 24/7 access to clean drinking water. Waterborne diseases dropped by 80%.',
+        narrative: 'The women of Sundarpur used to walk 3 hours daily to fetch water from a distant well. After KalNahiAajDaan installed a solar-powered purification plant, the village now has 24/7 access to clean drinking water. Waterborne diseases dropped by 80%.',
         quote: '"My children no longer fall sick every monsoon. This water plant changed our lives forever."',
         quotee: '— Geeta Devi, Village Elder',
         stats: [
@@ -127,8 +127,8 @@ const STORIES = [
         id: 's3',
         title: 'Stitching a New Future',
         subtitle: "Women's Empowerment in Action",
-        narrative: 'Fatima was once dependent on daily wages. Through AashaDaan\'s Women\'s Skill Workshop, she learned tailoring and now runs her own boutique. She employs 4 other women from her neighbourhood and earns 5x her previous income.',
-        quote: '"I went from stitching torn clothes to designing bridal wear. AashaDaan gave me wings."',
+        narrative: 'Fatima was once dependent on daily wages. Through KalNahiAajDaan\'s Women\'s Skill Workshop, she learned tailoring and now runs her own boutique. She employs 4 other women from her neighbourhood and earns 5x her previous income.',
+        quote: '"I went from stitching torn clothes to designing bridal wear. KalNahiAajDaan gave me wings."',
         quotee: '— Fatima Sheikh, Entrepreneur',
         stats: [
             { label: 'Women Trained', value: 200 },
@@ -164,11 +164,11 @@ const IMPACT_DATA = {
         { category: 'Emergency Relief',   percent: 5,  color: '#fb923c' }
     ],
     milestones: [
-        { year: '2020', title: 'Founded AashaDaan', desc: 'Started with 5 volunteers and a dream to transform rural India.' },
+        { year: '2020', title: 'Founded KalNahiAajDaan', desc: 'Started with 5 volunteers and a dream to transform rural India.' },
         { year: '2021', title: 'First 1,000 Meals Served', desc: 'Launched community kitchen program during COVID-19 lockdown.' },
         { year: '2022', title: '5,000 Trees Planted', desc: 'Green Earth Drive completed its first phase across 3 districts.' },
         { year: '2023', title: '10 Schools Built', desc: 'Rural School Initiative reaches double-digit milestone.' },
-        { year: '2024', title: '50,000 Lives Touched', desc: 'AashaDaan expands to 5 states with 500+ active volunteers.' }
+        { year: '2024', title: '50,000 Lives Touched', desc: 'KalNahiAajDaan expands to 5 states with 500+ active volunteers.' }
     ]
 };
 
