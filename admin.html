@@ -493,6 +493,13 @@
             <h2 id="campaign-modal-title">Add New Campaign</h2>
             <div class="form-group"><label>Campaign Title</label><input type="text" id="c-title" placeholder="e.g. Rural School Initiative"></div>
             <div class="form-group"><label>Description</label><textarea id="c-desc" placeholder="Brief description of the campaign..."></textarea></div>
+            <div class="form-group">
+                <label>Campaign Image Options</label>
+                <input type="file" id="c-image-file" accept="image/*" style="margin-bottom:0.5rem">
+                <input type="text" id="c-image-url" placeholder="Or enter image URL... (e.g. url('images/photo.jpg') center/cover)">
+                <input type="hidden" id="c-image-data">
+                <div id="c-image-preview" style="margin-top:0.5rem; max-height:100px; border-radius: var(--radius-sm); overflow:hidden;"></div>
+            </div>
             <div class="form-group"><label>Category</label>
                 <select id="c-category">
                     <option>Education</option><option>Health</option><option>Environment</option>
@@ -522,6 +529,13 @@
             <h2 id="story-modal-title">Add New Story</h2>
             <div class="form-group"><label>Story Title</label><input type="text" id="s-title" placeholder="e.g. From Darkness to Light"></div>
             <div class="form-group"><label>Subtitle</label><input type="text" id="s-subtitle" placeholder="e.g. Ravi's Education Journey"></div>
+            <div class="form-group">
+                <label>Story Image Options</label>
+                <input type="file" id="s-image-file" accept="image/*" style="margin-bottom:0.5rem">
+                <input type="text" id="s-image-url" placeholder="Or enter image URL... (e.g. url('images/photo.jpg'))">
+                <input type="hidden" id="s-image-data">
+                <div id="s-image-preview" style="margin-top:0.5rem; max-height:100px; border-radius: var(--radius-sm); overflow:hidden;"></div>
+            </div>
             <div class="form-group"><label>Narrative</label><textarea id="s-narrative" placeholder="Tell the full story..."></textarea></div>
             <div class="form-group"><label>Quote</label><input type="text" id="s-quote" placeholder="An impactful quote"></div>
             <div class="form-group"><label>Quote Author</label><input type="text" id="s-quotee" placeholder="— Author Name"></div>
@@ -725,6 +739,27 @@
         tbody.innerHTML = rows;
     }
 
+    // --- Image Upload Helpers ---
+    function setupImageUpload(fileId, dataId, previewId) {
+        document.getElementById(fileId).addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) {
+                document.getElementById(dataId).value = '';
+                document.getElementById(previewId).innerHTML = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const b64 = event.target.result;
+                document.getElementById(dataId).value = `url('${b64}') center/cover`;
+                document.getElementById(previewId).innerHTML = `<img src="${b64}" style="width:100px; height:auto; border-radius:4px;" />`;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    setupImageUpload('c-image-file', 'c-image-data', 'c-image-preview');
+    setupImageUpload('s-image-file', 's-image-data', 's-image-preview');
+
     // --- CRUD: Campaigns ---
     function openModal(type) {
         document.getElementById(type + '-modal').classList.add('show');
@@ -737,6 +772,10 @@
             document.getElementById('c-goal').value = '';
             document.getElementById('c-days').value = '';
             document.getElementById('c-edit-id').value = '';
+            document.getElementById('c-image-file').value = '';
+            document.getElementById('c-image-url').value = '';
+            document.getElementById('c-image-data').value = '';
+            document.getElementById('c-image-preview').innerHTML = '';
             document.getElementById('campaign-modal-title').textContent = 'Add New Campaign';
         }
         if (type === 'story') {
@@ -746,6 +785,10 @@
             document.getElementById('s-quote').value = '';
             document.getElementById('s-quotee').value = '';
             document.getElementById('s-edit-id').value = '';
+            document.getElementById('s-image-file').value = '';
+            document.getElementById('s-image-url').value = '';
+            document.getElementById('s-image-data').value = '';
+            document.getElementById('s-image-preview').innerHTML = '';
             document.getElementById('story-modal-title').textContent = 'Add New Story';
         }
     }
@@ -765,7 +808,7 @@
             raised: 0,
             donors: 0,
             daysLeft: parseInt(document.getElementById('c-days').value) || 0,
-            image: ''
+            image: document.getElementById('c-image-data').value || document.getElementById('c-image-url').value || ''
         };
         if (editId) {
             const idx = campaigns.findIndex(c => c.id === editId);
@@ -789,6 +832,14 @@
         document.getElementById('c-days').value = c.daysLeft;
         document.getElementById('c-status').value = c.status;
         document.getElementById('c-edit-id').value = c.id;
+        document.getElementById('c-image-url').value = c.image || '';
+        document.getElementById('c-image-data').value = c.image || '';
+        if (c.image && c.image.includes('data:image')) {
+            const b64Match = c.image.match(/url\(['"]?(data:image.*?)['"]?\)/);
+            if (b64Match) document.getElementById('c-image-preview').innerHTML = `<img src="${b64Match[1]}" style="width:100px; border-radius:4px;" />`;
+        } else {
+            document.getElementById('c-image-preview').innerHTML = '';
+        }
         document.getElementById('campaign-modal-title').textContent = 'Edit Campaign';
         openModal('campaign');
     }
@@ -820,6 +871,7 @@
             narrative: document.getElementById('s-narrative').value.trim(),
             quote: document.getElementById('s-quote').value.trim(),
             quotee: document.getElementById('s-quotee').value.trim(),
+            image: document.getElementById('s-image-data').value || document.getElementById('s-image-url').value || '',
             gradient: gradients[stories.length % gradients.length],
             stats: []
         };
@@ -844,6 +896,14 @@
         document.getElementById('s-quote').value = s.quote || '';
         document.getElementById('s-quotee').value = s.quotee || '';
         document.getElementById('s-edit-id').value = s.id;
+        document.getElementById('s-image-url').value = s.image || '';
+        document.getElementById('s-image-data').value = s.image || '';
+        if (s.image && s.image.includes('data:image')) {
+            const b64Match = s.image.match(/url\(['"]?(data:image.*?)['"]?\)/);
+            if (b64Match) document.getElementById('s-image-preview').innerHTML = `<img src="${b64Match[1]}" style="width:100px; border-radius:4px;" />`;
+        } else {
+            document.getElementById('s-image-preview').innerHTML = '';
+        }
         document.getElementById('story-modal-title').textContent = 'Edit Story';
         openModal('story');
     }
