@@ -403,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         viewport.innerHTML = STORIES.map((s, i) => `
             <div class="story-card ${i === 0 ? 'active' : ''}" data-index="${i}">
-                <div class="story-visual" style="background: ${s.gradient}">
+                <div class="story-visual" style="background: ${s.gradient}${s.image ? ', ' + s.image : ''}; background-size: cover; background-position: center; background-blend-mode: overlay;">
                     <span class="story-subtitle">${s.subtitle}</span>
                 </div>
                 <div class="story-content">

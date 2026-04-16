@@ -106,7 +106,8 @@ const STORIES = [
             { label: 'Invested', value: '₹15L' }
         ],
         gradient: 'linear-gradient(135deg, #fb923c, #f472b6)',
-        bgAccent: '#fb923c'
+        bgAccent: '#fb923c',
+        image: "url('images/story_darkness.jpeg')"
     },
     {
         id: 's2',
@@ -121,7 +122,8 @@ const STORIES = [
             { label: 'Disease Reduction', value: '80%' }
         ],
         gradient: 'linear-gradient(135deg, #06b6d4, #34d399)',
-        bgAccent: '#06b6d4'
+        bgAccent: '#06b6d4',
+        image: "url('images/story_water.jpeg')"
     },
     {
         id: 's3',
@@ -136,7 +138,8 @@ const STORIES = [
             { label: 'Income Growth', value: '5x' }
         ],
         gradient: 'linear-gradient(135deg, #c084fc, #f472b6)',
-        bgAccent: '#c084fc'
+        bgAccent: '#c084fc',
+        image: "url('images/story_stitching.jpeg')"
     }
 ];
 
