@@ -4,50 +4,56 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── FIREBASE SYNC: replace localStorage with global Firestore ──
-    window.addEventListener('firebase-ready', async () => {
-        const { db, fbCollection, fbGetDocs, fbDoc, fbSetDoc, onSnapshot } = window;
-        const campaignsCol = fbCollection(db, "campaigns");
-        const storiesCol = fbCollection(db, "stories");
-        const donationsCol = fbCollection(db, "donations");
+    // ── ADMIN SYNC: load campaigns & stories from admin localStorage ──
+    // ── FIREBASE SYNC: load campaigns & stories from Cloud Firestore ──
+    async function initFirebaseSync() {
+        if (!window.fb) return;
+        const { db, collection, onSnapshot, getDocs, setDoc, doc } = window.fb;
 
-        // Real-time listener: Campaigns
-        onSnapshot(campaignsCol, (snapshot) => {
-            if (snapshot.empty) {
-                // Seed database if empty
-                CAMPAIGNS.forEach(c => fbSetDoc(fbDoc(db, "campaigns", c.id), c));
-                return;
+        // 1. Hook into Campaigns
+        onSnapshot(collection(db, "campaigns"), (snapshot) => {
+            const remoteCampaigns = [];
+            snapshot.forEach(doc => remoteCampaigns.push({ ...doc.data(), id: doc.id }));
+            
+            if (remoteCampaigns.length > 0) {
+                CAMPAIGNS.length = 0;
+                remoteCampaigns.forEach(c => CAMPAIGNS.push(c));
+                renderCampaigns();
+                renderCampaignKPIs();
+            } else {
+                // If DB is empty, seed it with data.js values
+                CAMPAIGNS.forEach(c => setDoc(doc(db, "campaigns", c.id), c));
             }
-            CAMPAIGNS.length = 0;
-            snapshot.forEach(doc => CAMPAIGNS.push({ ...doc.data() }));
-            renderCampaignKPIs();
-            renderCampaigns();
-            renderCampaignSelect();
         });
 
-        // Real-time listener: Stories
-        onSnapshot(storiesCol, (snapshot) => {
-            if (snapshot.empty) {
-                STORIES.forEach((s, i) => fbSetDoc(fbDoc(db, "stories", s.id || `s${i}`), s));
-                return;
+        // 2. Hook into Stories
+        onSnapshot(collection(db, "stories"), (snapshot) => {
+            const remoteStories = [];
+            snapshot.forEach(doc => remoteStories.push({ ...doc.data(), id: doc.id }));
+            
+            if (remoteStories.length > 0) {
+                STORIES.length = 0;
+                remoteStories.forEach(s => STORIES.push(s));
+                renderStories();
+            } else {
+                // Seed stories
+                STORIES.forEach((s, idx) => setDoc(doc(db, "stories", s.id || 's'+idx), s));
             }
-            STORIES.length = 0;
-            snapshot.forEach(doc => STORIES.push({ ...doc.data() }));
-            renderStories();
         });
+    }
+    initFirebaseSync();
 
-        // Real-time listener: Donations (limited to top recent)
-        onSnapshot(donationsCol, (snapshot) => {
-            const list = snapshot.docs.map(doc => doc.data()).sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            renderRecentDonations(list);
-            renderTicker(list);
-        });
-    });
-
-    // Helper: persist campaign state back to global Firestore
-    async function syncCampaignsToGlobal(campaign) {
-        if (!window.db || !campaign) return;
-        await window.fbSetDoc(window.fbDoc(window.db, "campaigns", campaign.id), campaign);
+    // Helper: persist campaign state back to Firestore
+    async function syncCampaignsToAdmin(campaign) {
+        if (!window.fb) return;
+        const { db, doc, updateDoc, increment } = window.fb;
+        if (campaign && campaign.id) {
+            const campRef = doc(db, "campaigns", campaign.id);
+            await updateDoc(campRef, {
+                raised: campaign.raised,
+                donors: campaign.donors
+            });
+        }
     }
 
     // ── SPA ROUTER ──────────────────────────────────────────────
@@ -286,13 +292,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    function renderRecentDonations(firestoreDonations = []) {
+    function renderRecentDonations() {
         const list = document.getElementById('recent-donations-list');
-        const all = [...firestoreDonations.slice(0, 5), ...RECENT_DONATIONS_SEED];
+        const stored = JSON.parse(localStorage.getItem('donations') || '[]');
+        const all = [...stored.slice(-5).reverse(), ...RECENT_DONATIONS_SEED];
         list.innerHTML = all.slice(0, 6).map(d => `
             <div class="donation-item">
                 <span class="d-amount">₹${d.amount.toLocaleString('en-IN')}</span>
-                <span class="d-info">${d.name} • ${d.campaign} • ${d.time || 'Global'}</span>
+                <span class="d-info">${d.name} • ${d.campaign} • ${d.time}</span>
             </div>
         `).join('');
     }
@@ -326,23 +333,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaign = CAMPAIGNS.find(c => c.id === campaignId);
         const campaignName = campaign ? campaign.title : 'General Fund';
 
-        // Add monetary equivalent to donations and update campaign (Firestore)
-        if (window.db) {
-            const donationId = 'd' + Date.now();
-            window.fbSetDoc(window.fbDoc(window.db, "donations", donationId), { 
-                name, amount, campaign: campaignName, campaignId: campaign ? campaign.id : null, 
-                time: 'Just now', timestamp: Date.now() 
-            });
-        }
+        // Add monetary equivalent to donations and update campaign
+        const donations = JSON.parse(localStorage.getItem('donations') || '[]');
+        donations.push({ name, amount, campaign: campaignName, campaignId: campaign ? campaign.id : null, time: 'Just now' });
+        localStorage.setItem('donations', JSON.stringify(donations));
 
         // Sync with campaign
         if (campaign) {
             campaign.raised += amount;
             campaign.donors += 1;
-            syncCampaignsToGlobal(campaign);
+            renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
+            renderCampaignKPIs();
         }
 
         showDonationModal(`₹${amount.toLocaleString('en-IN')} donated by ${name} to ${campaignName}. Thank you for your generosity!`);
+        renderRecentDonations();
+        syncCampaignsToAdmin(campaign); // Pass the updated campaign object to Firestore
 
         // Reset
         selectedPreset = null;
@@ -371,21 +377,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaign = CAMPAIGNS.find(c => c.id === campaignId);
         const campaignName = campaign ? campaign.title : 'General Fund';
 
-        // Add monetary equivalent to donations and update campaign (Firestore)
-        if (window.db) {
-            const donationId = 'd' + Date.now();
-            window.fbSetDoc(window.fbDoc(window.db, "donations", donationId), { 
-                name, amount: totalAmount, campaign: campaignName + ' (Resources)', 
-                campaignId: campaign ? campaign.id : null, time: 'Just now', timestamp: Date.now() 
-            });
-        }
+        // Add monetary equivalent to donations and update campaign
+        const donations = JSON.parse(localStorage.getItem('donations') || '[]');
+        donations.push({ name, amount: totalAmount, campaign: campaignName + ' (Resources)', campaignId: campaign ? campaign.id : null, time: 'Just now' });
+        localStorage.setItem('donations', JSON.stringify(donations));
 
         // Sync with campaign
         if (campaign) {
             campaign.raised += totalAmount;
             campaign.donors += 1;
-            syncCampaignsToGlobal(campaign);
-        }
+            renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
+        syncCampaignsToAdmin(campaign); // Pass updated campaign object to Firestore
 
         showDonationModal(`${name} donated ${summary} (Value: ₹${totalAmount.toLocaleString('en-IN')}) to ${campaignName}. Your contribution will reach those in need!`);
         renderRecentDonations();
@@ -622,14 +624,12 @@ document.addEventListener('DOMContentLoaded', () => {
             interests: [...selectedInterests],
             days: [...selectedDays],
             times: [...document.querySelectorAll('.time-chip input:checked')].map(c => c.value),
-            date: new Date().toISOString(),
-            timestamp: Date.now(),
-            status: 'pending'
+            date: new Date().toISOString()
         };
 
-        if (window.db) {
-            const volId = 'v' + Date.now();
-            window.fbSetDoc(window.fbDoc(window.db, "volunteers", volId), volunteer);
+        if (window.fb) {
+            const { db, collection, setDoc, doc } = window.fb;
+            setDoc(doc(db, "volunteers", volunteer.id), volunteer);
         }
 
         goToVolStep(4); // success
@@ -705,12 +705,17 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
-    function renderTicker(firestoreDonations = []) {
+    function renderTicker() {
         const track = document.getElementById('ticker-track');
-        const items = [];
-
-        firestoreDonations.slice(0, 5).forEach(d => {
+        // Use recent documents from campaigns for a live ticker effect
+        const latestDonations = CAMPAIGNS.flatMap(c => c.recentDonations || []).sort((a,b) => b.timestamp - a.timestamp);
+        latestDonations.slice(0, 5).forEach(d => {
             items.push(`💚 ${d.name} donated ₹${d.amount.toLocaleString('en-IN')} to ${d.campaign}`);
+        });
+        
+        const latestVols = (window.VOLUNTEERS || []).slice(-3).reverse();
+        latestVols.forEach(v => {
+            items.push(`🤝 ${v.name} joined as a volunteer`);
         });
 
         // Add seed items

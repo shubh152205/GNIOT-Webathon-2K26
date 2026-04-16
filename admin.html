@@ -8,6 +8,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <!-- Firebase SDK (v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqXZKf5Wmg7cxMn4z-OzBH116MmPrAddw",
+            authDomain: "kalnahiaajdaan-shubh-152205.firebaseapp.com",
+            projectId: "kalnahiaajdaan-shubh-152205",
+            storageBucket: "kalnahiaajdaan-shubh-152205.firebasestorage.app",
+            messagingSenderId: "438589238825",
+            appId: "1:438589238825:web:ca12e298ed3255054a7638"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Expose to window for external scripts
+        window.fb = { db, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot, increment, arrayUnion };
+    </script>
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -550,78 +570,95 @@
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
-    <script type="module" src="firebase-config.js"></script>
     <script src="data.js"></script>
     <script>
     // ============================================================
     // KalNahiAajDaan Admin Panel — Logic
     // ============================================================
 
-    // --- Global Data (Firestore-backed) ---
-    window.addEventListener('firebase-ready', async () => {
-        const { db, fbCollection, onSnapshot, fbDoc, fbSetDoc, fbDeleteDoc } = window;
-        const campaignsCol = fbCollection(db, "campaigns");
-        const storiesCol = fbCollection(db, "stories");
-        const volsCol = fbCollection(db, "volunteers");
-        const donationsCol = fbCollection(db, "donations");
+    // --- Data Layer (Firestore-backed) ---
+    async function initFirebaseSync() {
+        if (!window.fb) return;
+        const { db, collection, onSnapshot, getDocs, setDoc, doc } = window.fb;
 
-        // Sync: Campaigns
-        onSnapshot(campaignsCol, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ ...doc.data() }));
-            renderCampaigns(data);
-            updateKPIs(data, null, null, null);
+        // Sync Campaigns
+        onSnapshot(collection(db, "campaigns"), (snapshot) => {
+            CAMPAIGNS.length = 0;
+            snapshot.forEach(doc => CAMPAIGNS.push({ ...doc.data(), id: doc.id }));
+            renderCampaigns();
+            updateKPIs();
+            renderRecentActivity();
         });
 
-        // Sync: Stories
-        onSnapshot(storiesCol, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ ...doc.data() }));
-            renderStories(data);
+        // Sync Stories
+        onSnapshot(collection(db, "stories"), (snapshot) => {
+            STORIES.length = 0;
+            snapshot.forEach(doc => STORIES.push({ ...doc.data(), id: doc.id }));
+            renderStories();
         });
 
-        // Sync: Volunteers
-        onSnapshot(volsCol, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.timestamp - a.timestamp);
-            renderVolunteers(data);
-            updateKPIs(null, data, null, null);
+        // Sync Volunteers
+        onSnapshot(collection(db, "volunteers"), (snapshot) => {
+            const vols = [];
+            snapshot.forEach(doc => vols.push({ ...doc.data(), id: doc.id }));
+            window.VOLUNTEERS = vols; // Global for this session
+            renderVolunteers();
+            updateKPIs();
+            renderRecentActivity();
         });
+    }
+    initFirebaseSync();
 
-        // Sync: Donations
-        onSnapshot(donationsCol, (snapshot) => {
-            const data = snapshot.docs.map(doc => doc.data()).sort((a,b) => b.timestamp - a.timestamp);
-            renderRecentActivity(data);
-            updateKPIs(null, null, data, null);
-        });
-    });
+    function getAdminCampaigns() { return CAMPAIGNS; }
+    function saveAdminCampaigns(campaign) {
+        if (!window.fb) return;
+        const { db, doc, setDoc } = window.fb;
+        setDoc(doc(db, "campaigns", campaign.id), campaign);
+    }
 
-    // Helper: find campaign/story by id in global state
-    function findCampaign(id) { return CAMPAIGNS.find(c => c.id === id); }
-    function findStory(id) { return STORIES.find(s => s.id === id); }
+    function getAdminStories() { return STORIES; }
+    function saveAdminStories(story) {
+        if (!window.fb) return;
+        const { db, doc, setDoc } = window.fb;
+        setDoc(doc(db, "stories", story.id), story);
+    }
+
+    function getAdminVolunteers() { return window.VOLUNTEERS || []; }
+    async function updateVolStatus(idx, status) {
+        const vols = getAdminVolunteers();
+        const v = vols[idx];
+        if (v && v.id && window.fb) {
+            const { db, doc, updateDoc } = window.fb;
+            await updateDoc(doc(db, "volunteers", v.id), { status: status });
+            showToast(`Volunteer ${status}!`);
+        }
+    }
+
+    function getDonations() {
+        // Donations are still local or we should sync them too?
+        // Let's sync Recent Activity too via Firestore for full "virtual" feel
+        return []; 
+    }
 
     // --- Format helpers ---
     function fmt(n) {
-        if (!n) return '₹0';
         if (n >= 10000000) return '₹' + (n/10000000).toFixed(1) + 'Cr';
         if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
         return '₹' + n.toLocaleString('en-IN');
     }
 
-    // --- Global State Cache (local view) ---
-    let cachedCampaigns = [];
-    let cachedVols = [];
-    let cachedDonations = [];
-
     // --- KPI Update ---
-    function updateKPIs(camps, vols, dons) {
-        if (camps) cachedCampaigns = camps;
-        if (vols) cachedVols = vols;
-        if (dons) cachedDonations = dons;
+    function updateKPIs() {
+        const campaigns = CAMPAIGNS;
+        const volunteers = getAdminVolunteers();
+        // For total raised/donors, we sum from campaigns
+        const totalDonors = campaigns.reduce((sum, c) => sum + (c.donors || 0), 0);
+        const totalRaised = campaigns.reduce((sum, c) => sum + (c.raised || 0), 0);
 
-        document.getElementById('kpi-campaigns').textContent = cachedCampaigns.length;
-        const totalDonors = cachedCampaigns.reduce((sum, c) => sum + (c.donors || 0), 0);
+        document.getElementById('kpi-campaigns').textContent = campaigns.length;
         document.getElementById('kpi-donors').textContent = totalDonors.toLocaleString('en-IN');
-        const totalRaised = cachedCampaigns.reduce((sum, c) => sum + (c.raised || 0), 0);
         document.getElementById('kpi-raised').textContent = fmt(totalRaised);
-        document.getElementById('kpi-volunteers').textContent = cachedVols.length;
+        document.getElementById('kpi-volunteers').textContent = volunteers.length;
     }
 
     // --- Navigation ---
@@ -642,9 +679,10 @@
     });
 
     // --- Render Campaigns Table ---
-    function renderCampaigns(campaigns) {
+    function renderCampaigns() {
+        const campaigns = getAdminCampaigns();
         const tbody = document.getElementById('campaigns-tbody');
-        if (!campaigns || campaigns.length === 0) {
+        if (campaigns.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bx bx-folder-open"></i><p>No campaigns yet.</p></div></td></tr>';
             return;
         }
@@ -659,8 +697,8 @@
                 <td>${c.daysLeft}</td>
                 <td>
                     <div class="actions-cell">
-                        <button class="btn-secondary" onclick="editCampaignById('${c.id}')"><i class='bx bx-edit'></i> Edit</button>
-                        <button class="btn-danger" onclick="deleteCampaignById('${c.id}')"><i class='bx bx-trash'></i></button>
+                        <button class="btn-secondary" onclick="editCampaign(${i})"><i class='bx bx-edit'></i> Edit</button>
+                        <button class="btn-danger" onclick="deleteCampaign(${i})"><i class='bx bx-trash'></i></button>
                     </div>
                 </td>
             </tr>
@@ -668,9 +706,10 @@
     }
 
     // --- Render Stories ---
-    function renderStories(stories) {
+    function renderStories() {
+        const stories = getAdminStories();
         const grid = document.getElementById('stories-grid');
-        if (!stories || stories.length === 0) {
+        if (stories.length === 0) {
             grid.innerHTML = '<div class="empty-state"><i class="bx bx-book-open"></i><p>No stories yet.</p></div>';
             return;
         }
@@ -688,8 +727,8 @@
                 <div class="story-mgmt-body">
                     <p>${s.narrative || ''}</p>
                     <div class="story-mgmt-actions">
-                        <button class="btn-secondary" onclick="editStoryById('${s.id}')"><i class='bx bx-edit'></i> Edit</button>
-                        <button class="btn-danger" onclick="deleteStoryById('${s.id}')"><i class='bx bx-trash'></i></button>
+                        <button class="btn-secondary" onclick="editStory(${i})"><i class='bx bx-edit'></i> Edit</button>
+                        <button class="btn-danger" onclick="deleteStory(${i})"><i class='bx bx-trash'></i></button>
                     </div>
                 </div>
             </div>
@@ -697,9 +736,10 @@
     }
 
     // --- Render Volunteers ---
-    function renderVolunteers(vols) {
+    function renderVolunteers() {
+        const vols = getAdminVolunteers();
         const tbody = document.getElementById('volunteers-tbody');
-        if (!vols || vols.length === 0) {
+        if (vols.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="bx bx-user-x"></i><p>No volunteer requests yet.</p></div></td></tr>';
             return;
         }
@@ -716,9 +756,9 @@
                 <td>
                     <div class="actions-cell">
                         ${status === 'pending' ? `
-                            <button class="btn-approve" onclick="updateVolStatusGlobal('${v.id}', 'approved')"><i class='bx bx-check'></i> Approve</button>
-                            <button class="btn-reject" onclick="updateVolStatusGlobal('${v.id}', 'rejected')"><i class='bx bx-x'></i> Reject</button>
-                        ` : `<span style="font-size:0.75rem;color:var(--on-surface-variant);">${status}</span>`}
+                            <button class="btn-approve" onclick="updateVolStatus(${i}, 'approved')"><i class='bx bx-check'></i> Approve</button>
+                            <button class="btn-reject" onclick="updateVolStatus(${i}, 'rejected')"><i class='bx bx-x'></i> Reject</button>
+                        ` : `<span style="font-size:0.75rem;color:var(--on-surface-variant);">—</span>`}
                     </div>
                 </td>
             </tr>`;
@@ -726,17 +766,27 @@
     }
 
     // --- Recent Activity ---
-    function renderRecentActivity(donations = []) {
+    function renderRecentActivity() {
+        const donations = getDonations().slice(-8).reverse();
+        const vols = getAdminVolunteers().slice(-5).reverse();
         const tbody = document.getElementById('recent-activity');
-        let rows = donations.slice(0, 10).map(d => `
-            <tr>
+        let rows = '';
+        donations.forEach(d => {
+            rows += `<tr>
                 <td><span class="badge badge-active">Donation</span></td>
-                <td>${d.name || 'Anonymous'} to ${d.campaign || 'General'}</td>
+                <td>${d.name || 'Anonymous'}</td>
                 <td>${fmt(d.amount || 0)}</td>
-                <td>${d.time || 'Global'}</td>
-            </tr>
-        `).join('');
-        
+                <td>${d.date || '—'}</td>
+            </tr>`;
+        });
+        vols.forEach(v => {
+            rows += `<tr>
+                <td><span class="badge badge-pending">Volunteer</span></td>
+                <td>${v.name || 'N/A'}</td>
+                <td>${(v.interests || []).join(', ')}</td>
+                <td>${v.date || '—'}</td>
+            </tr>`;
+        });
         if (!rows) rows = '<tr><td colspan="4"><div class="empty-state"><i class="bx bx-time-five"></i><p>No recent activity.</p></div></td></tr>';
         tbody.innerHTML = rows;
     }
@@ -795,14 +845,13 @@
         }
     }
 
-    async function saveCampaign() {
+    function saveCampaign() {
         const title = document.getElementById('c-title').value.trim();
         if (!title) { showToast('Please enter a campaign title', true); return; }
+        const campaigns = getAdminCampaigns();
         const editId = document.getElementById('c-edit-id').value;
-        const id = editId || 'c' + Date.now();
-        
         const obj = {
-            id,
+            id: editId || 'c' + Date.now(),
             title,
             description: document.getElementById('c-desc').value.trim(),
             category: document.getElementById('c-category').value,
@@ -813,22 +862,20 @@
             daysLeft: parseInt(document.getElementById('c-days').value) || 0,
             image: document.getElementById('c-image-data').value || document.getElementById('c-image-url').value || ''
         };
-
         if (editId) {
-            const existing = cachedCampaigns.find(c => c.id === editId);
-            if (existing) { obj.raised = existing.raised; obj.donors = existing.donors; }
+            const idx = campaigns.findIndex(c => c.id === editId);
+            if (idx > -1) { obj.raised = campaigns[idx].raised; obj.donors = campaigns[idx].donors; obj.image = campaigns[idx].image; campaigns[idx] = obj; }
+        } else {
+            campaigns.push(obj);
         }
-
-        if (window.db) {
-            await window.fbSetDoc(window.fbDoc(window.db, "campaigns", id), obj);
-            closeModal('campaign');
-            showToast(editId ? 'Campaign updated globally!' : 'Campaign added globally!');
-        }
+        saveAdminCampaigns(obj);
+        closeModal('campaign');
+        showToast(editId ? 'Campaign updated!' : 'Campaign added!');
     }
 
-    function editCampaignById(id) {
-        const c = cachedCampaigns.find(item => item.id === id);
-        if (!c) return;
+    function editCampaign(idx) {
+        const campaigns = getAdminCampaigns();
+        const c = campaigns[idx];
         document.getElementById('c-title').value = c.title;
         document.getElementById('c-desc').value = c.description;
         document.getElementById('c-category').value = c.category;
@@ -848,55 +895,63 @@
         openModal('campaign');
     }
 
-    async function deleteCampaignById(id) {
-        if (!confirm('Delete this campaign globally?')) return;
-        if (window.db) {
-            await window.fbDeleteDoc(window.fbDoc(window.db, "campaigns", id));
-            showToast('Campaign deleted globally');
+    async function deleteCampaign(idx) {
+        if (!confirm('Delete this campaign?')) return;
+        const campaigns = getAdminCampaigns();
+        const c = campaigns[idx];
+        if (c && c.id && window.fb) {
+            const { db, doc, deleteDoc } = window.fb;
+            await deleteDoc(doc(db, "campaigns", c.id));
+            showToast('Campaign deleted');
         }
     }
 
     // --- CRUD: Stories ---
-    async function saveStory() {
+    async function deleteStory(idx) {
+        if (!confirm('Delete this story?')) return;
+        const stories = getAdminStories();
+        const s = stories[idx];
+        if (s && s.id && window.fb) {
+            const { db, doc, deleteDoc } = window.fb;
+            await deleteDoc(doc(db, "stories", s.id));
+            showToast('Story deleted');
+        }
+    }
+    function saveStory() {
         const title = document.getElementById('s-title').value.trim();
         if (!title) { showToast('Please enter a story title', true); return; }
+        const stories = getAdminStories();
         const editId = document.getElementById('s-edit-id').value;
-        const id = editId || 's' + Date.now();
-        
         const gradients = [
             'linear-gradient(135deg, #fb923c, #f472b6)',
             'linear-gradient(135deg, #06b6d4, #34d399)',
             'linear-gradient(135deg, #c084fc, #f472b6)',
         ];
-        
         const obj = {
-            id,
+            id: editId || 's' + Date.now(),
             title,
             subtitle: document.getElementById('s-subtitle').value.trim(),
             narrative: document.getElementById('s-narrative').value.trim(),
             quote: document.getElementById('s-quote').value.trim(),
             quotee: document.getElementById('s-quotee').value.trim(),
             image: document.getElementById('s-image-data').value || document.getElementById('s-image-url').value || '',
-            gradient: gradients[Math.floor(Math.random() * gradients.length)],
+            gradient: gradients[stories.length % gradients.length],
             stats: []
         };
-
-        const existing = cachedStories.find(s => s.id === editId);
-        if (existing) { obj.gradient = existing.gradient; obj.stats = existing.stats; }
-
-        if (window.db) {
-            await window.fbSetDoc(window.fbDoc(window.db, "stories", id), obj);
-            closeModal('story');
-            showToast(editId ? 'Story updated!' : 'Story added!');
+        if (editId) {
+            const idx = stories.findIndex(s => s.id === editId);
+            if (idx > -1) { obj.gradient = stories[idx].gradient; obj.image = stories[idx].image; obj.stats = stories[idx].stats; stories[idx] = obj; }
+        } else {
+            stories.push(obj);
         }
+        saveAdminStories(obj);
+        closeModal('story');
+        showToast(editId ? 'Story updated!' : 'Story added!');
     }
 
-    let cachedStories = []; // local view
-    // Update the onSnapshot listener above to also set cachedStories
-
-    function editStoryById(id) {
-        const s = cachedStories.find(item => item.id === id);
-        if (!s) return;
+    function editStory(idx) {
+        const stories = getAdminStories();
+        const s = stories[idx];
         document.getElementById('s-title').value = s.title;
         document.getElementById('s-subtitle').value = s.subtitle || '';
         document.getElementById('s-narrative').value = s.narrative || '';
@@ -915,29 +970,22 @@
         openModal('story');
     }
 
-    async function deleteStoryById(id) {
+    function deleteStory(idx) {
         if (!confirm('Delete this story?')) return;
-        if (window.db) {
-            await window.fbDeleteDoc(window.fbDoc(window.db, "stories", id));
-            showToast('Story deleted');
-        }
+        const stories = getAdminStories();
+        stories.splice(idx, 1);
+        saveAdminStories(stories);
+        renderStories(); updateKPIs();
+        showToast('Story deleted');
     }
 
-    // Update listeners to populate local story cache
-    window.addEventListener('firebase-ready', async () => {
-        const { db, fbCollection, onSnapshot } = window;
-        onSnapshot(fbCollection(db, "stories"), (snapshot) => {
-            cachedStories = snapshot.docs.map(doc => doc.data());
-        });
-    });
-
     // --- Volunteer Status ---
-    async function updateVolStatusGlobal(id, status) {
-        if (window.db) {
-            const volRef = window.fbDoc(window.db, "volunteers", id);
-            await window.fbSetDoc(volRef, { status: status }, { merge: true });
-            showToast(`Volunteer ${status}!`);
-        }
+    function updateVolStatus(idx, status) {
+        const vols = getAdminVolunteers();
+        vols[idx].status = status;
+        saveAdminVolunteers(vols);
+        renderVolunteers();
+        showToast(`Volunteer ${status}!`);
     }
 
     // --- Toast ---
