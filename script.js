@@ -4,6 +4,27 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ── ADMIN SYNC: load campaigns & stories from admin localStorage ──
+    (function syncFromAdmin() {
+        const adminCampaigns = localStorage.getItem('admin_campaigns');
+        if (adminCampaigns) {
+            const parsed = JSON.parse(adminCampaigns);
+            CAMPAIGNS.length = 0;
+            parsed.forEach(c => CAMPAIGNS.push(c));
+        }
+        const adminStories = localStorage.getItem('admin_stories');
+        if (adminStories) {
+            const parsed = JSON.parse(adminStories);
+            STORIES.length = 0;
+            parsed.forEach(s => STORIES.push(s));
+        }
+    })();
+
+    // Helper: persist campaign state back to admin localStorage
+    function syncCampaignsToAdmin() {
+        localStorage.setItem('admin_campaigns', JSON.stringify(CAMPAIGNS));
+    }
+
     // ── SPA ROUTER ──────────────────────────────────────────────
     const sections = document.querySelectorAll('.page-section');
     const navLinks = document.querySelectorAll('.nav-link, .tab');
@@ -163,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     renderCampaignKPIs();
     renderCampaigns();
+    syncCampaignsToAdmin();
 
     // ── DONATE ──────────────────────────────────────────────────
     let selectedPreset = null;
@@ -295,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showDonationModal(`₹${amount.toLocaleString('en-IN')} donated by ${name} to ${campaignName}. Thank you for your generosity!`);
         renderRecentDonations();
+        syncCampaignsToAdmin();
 
         // Reset
         selectedPreset = null;
@@ -335,6 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
             renderCampaignKPIs();
         }
+        syncCampaignsToAdmin();
 
         showDonationModal(`${name} donated ${summary} (Value: ₹${totalAmount.toLocaleString('en-IN')}) to ${campaignName}. Your contribution will reach those in need!`);
         renderRecentDonations();
