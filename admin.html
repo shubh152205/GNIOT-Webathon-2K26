@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KalNahiAajDaan Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0d1321;
+            --surface: #0d1321;
+            --surface-container-low: #151b2a;
+            --surface-container: #191f2e;
+            --surface-container-high: #242a39;
+            --surface-container-highest: #2f3544;
+            --on-surface: #dde2f6;
+            --on-surface-variant: #bbcac0;
+            --primary: #5af0b3;
+            --primary-container: #cbffe2;
+            --secondary: #7cd0ff;
+            --on-primary: #003825;
+            --outline: #85948b;
+            --outline-variant: #3c4a42;
+            --error: #ffb4ab;
+            --error-container: #93000a;
+            --glass-border: rgba(90,240,179,0.08);
+            --font-editorial: 'Manrope', sans-serif;
+            --font-utility: 'Inter', sans-serif;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.25rem;
+            --sidebar-w: 260px;
+        }
+
+        body {
+            font-family: var(--font-utility);
+            background: var(--bg);
+            color: var(--on-surface);
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: var(--sidebar-w) 1fr;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .admin-sidebar {
+            position: fixed; top: 0; left: 0;
+            width: var(--sidebar-w); height: 100vh;
+            background: rgba(19, 27, 46, 0.85);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column;
+            padding: 1.5rem 0;
+            z-index: 100;
+        }
+        .admin-brand {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0 1.5rem; margin-bottom: 2.5rem;
+        }
+        .admin-brand-logo {
+            width: 44px; height: 44px; border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .admin-brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .admin-brand-text { display: flex; flex-direction: column; }
+        .admin-brand-name {
+            font-family: var(--font-editorial);
+            font-weight: 800; font-size: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .admin-brand-tag {
+            font-size: 0.625rem; color: var(--on-surface-variant);
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+
+        .admin-nav { flex: 1; padding: 0 0.75rem; }
+        .admin-nav-link {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem; border-radius: var(--radius-md);
+            color: var(--on-surface-variant); text-decoration: none;
+            font-size: 0.875rem; font-weight: 500;
+            transition: all 0.2s ease; cursor: pointer;
+            margin-bottom: 0.25rem; border: none; background: none; width: 100%;
+            font-family: var(--font-utility);
+        }
+        .admin-nav-link:hover { background: var(--surface-container-high); color: var(--on-surface); }
+        .admin-nav-link.active {
+            background: rgba(90,240,179,0.1); color: var(--primary);
+        }
+        .admin-nav-link i { font-size: 1.25rem; }
+
+        .admin-sidebar-footer {
+            padding: 0 1.25rem; margin-top: auto;
+        }
+        .admin-sidebar-footer a {
+            display: flex; align-items: center; gap: 0.5rem;
+            color: var(--secondary); font-size: 0.8125rem;
+            text-decoration: none; padding: 0.75rem 0;
+        }
+        .admin-sidebar-footer a:hover { text-decoration: underline; }
+
+        /* ===== MAIN ===== */
+        .admin-main {
+            grid-column: 2;
+            padding: 2rem 2.5rem;
+            min-height: 100vh;
+        }
+        .admin-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .admin-header h1 {
+            font-family: var(--font-editorial);
+            font-size: 1.75rem; font-weight: 800;
+        }
+        .admin-header-tag {
+            font-size: 0.6875rem; color: var(--on-surface-variant);
+            background: var(--surface-container-high);
+            padding: 0.375rem 0.75rem; border-radius: 100px;
+            font-family: var(--font-utility);
+        }
+
+        /* ===== KPI CARDS ===== */
+        .kpi-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+        .kpi-card {
+            background: var(--surface-container);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border-left: 3px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover { transform: translateY(-2px); }
+        .kpi-card:nth-child(2) { border-left-color: var(--secondary); }
+        .kpi-card:nth-child(3) { border-left-color: #fbbf24; }
+        .kpi-card:nth-child(4) { border-left-color: #f472b6; }
+        .kpi-label {
+            font-size: 0.6875rem; color: var(--on-surface-variant);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+        }
+        .kpi-value {
+            font-family: var(--font-editorial);
+            font-size: 2rem; font-weight: 800;
+        }
+        .kpi-sub {
+            font-size: 0.75rem; color: var(--on-surface-variant);
+            margin-top: 0.25rem;
+        }
+
+        /* ===== SECTION PANELS ===== */
+        .admin-panel {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .admin-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .panel-header h2 {
+            font-family: var(--font-editorial);
+            font-size: 1.375rem; font-weight: 700;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: linear-gradient(135deg, var(--primary), #45dfa3);
+            color: var(--on-primary); font-weight: 700;
+            border: none; border-radius: var(--radius-md);
+            cursor: pointer; font-size: 0.8125rem;
+            font-family: var(--font-utility);
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(90,240,179,0.2);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(90,240,179,0.3);
+        }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            background: var(--surface-container-high);
+            color: var(--on-surface); font-weight: 600;
+            border: 1px solid rgba(90,240,179,0.1);
+            border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 0.75rem;
+            font-family: var(--font-utility);
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover { background: var(--surface-container-highest); }
+        .btn-danger {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem;
+            background: rgba(255,180,171,0.08);
+            color: var(--error); font-weight: 600;
+            border: 1px solid rgba(255,180,171,0.15);
+            border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 0.75rem;
+            font-family: var(--font-utility);
+            transition: all 0.2s ease;
+        }
+        .btn-danger:hover { background: rgba(255,180,171,0.15); }
+        .btn-approve {
+            padding: 0.375rem 0.75rem;
+            background: rgba(90,240,179,0.1);
+            color: var(--primary); border: 1px solid rgba(90,240,179,0.15);
+            border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 0.6875rem; font-weight: 700;
+            font-family: var(--font-utility);
+            transition: all 0.2s;
+        }
+        .btn-approve:hover { background: rgba(90,240,179,0.2); }
+        .btn-reject {
+            padding: 0.375rem 0.75rem;
+            background: rgba(255,180,171,0.08);
+            color: var(--error); border: 1px solid rgba(255,180,171,0.12);
+            border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 0.6875rem; font-weight: 700;
+            font-family: var(--font-utility);
+            transition: all 0.2s;
+        }
+        .btn-reject:hover { background: rgba(255,180,171,0.15); }
+
+        /* ===== TABLE ===== */
+        .data-table {
+            width: 100%; border-collapse: separate; border-spacing: 0 0.5rem;
+        }
+        .data-table thead th {
+            text-align: left; padding: 1rem 1.25rem;
+            font-size: 0.6875rem; font-weight: 700;
+            color: var(--on-surface-variant);
+            text-transform: uppercase; letter-spacing: 1px;
+            background: var(--surface-container-low);
+        }
+        .data-table thead th:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+        .data-table thead th:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+        .data-table tbody tr {
+            background: var(--surface-container);
+            transition: background 0.2s;
+        }
+        .data-table tbody tr:hover { background: var(--surface-container-high); }
+        .data-table tbody td {
+            padding: 1rem 1.25rem;
+            font-size: 0.8125rem;
+            vertical-align: middle;
+        }
+        .data-table tbody td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+        .data-table tbody td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-block; padding: 0.25rem 0.625rem;
+            border-radius: 100px; font-size: 0.625rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-active { background: rgba(90,240,179,0.12); color: var(--primary); }
+        .badge-urgent { background: rgba(251,191,36,0.12); color: #fbbf24; }
+        .badge-completed { background: rgba(124,208,255,0.12); color: var(--secondary); }
+        .badge-pending { background: rgba(255,222,167,0.12); color: #ffdea7; }
+        .badge-approved { background: rgba(90,240,179,0.12); color: var(--primary); }
+        .badge-rejected { background: rgba(255,180,171,0.1); color: var(--error); }
+
+        .actions-cell { display: flex; gap: 0.5rem; }
+
+        /* ===== STORY CARDS ===== */
+        .story-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+        .story-mgmt-card {
+            background: var(--surface-container);
+            border-radius: var(--radius-lg);
+            overflow: hidden; transition: transform 0.2s;
+        }
+        .story-mgmt-card:hover { transform: translateY(-3px); }
+        .story-mgmt-header {
+            height: 120px; padding: 1.25rem;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            position: relative;
+        }
+        .story-mgmt-header::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(25,31,46,0.95), transparent);
+        }
+        .story-mgmt-header h3 {
+            position: relative; z-index: 1;
+            font-family: var(--font-editorial);
+            font-size: 1rem; font-weight: 700;
+        }
+        .story-mgmt-body {
+            padding: 1.25rem;
+        }
+        .story-mgmt-body p {
+            font-size: 0.8125rem; color: var(--on-surface-variant);
+            line-height: 1.6; margin-bottom: 1rem;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .story-mgmt-actions { display: flex; gap: 0.5rem; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: var(--surface-container);
+            border-radius: var(--radius-xl);
+            padding: 2rem; width: 90%; max-width: 560px;
+            border: 1px solid var(--glass-border);
+            animation: fadeIn 0.3s ease;
+            max-height: 85vh; overflow-y: auto;
+        }
+        .modal-box h2 {
+            font-family: var(--font-editorial);
+            font-size: 1.375rem; font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group label {
+            display: block; font-size: 0.75rem; font-weight: 600;
+            color: var(--on-surface-variant); margin-bottom: 0.375rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.75rem 1rem;
+            background: var(--surface-container-low);
+            border: 1px solid rgba(90,240,179,0.08);
+            border-radius: var(--radius-sm);
+            color: var(--on-surface);
+            font-family: var(--font-utility);
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(124,208,255,0.06);
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .modal-actions {
+            display: flex; gap: 0.75rem; justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem;
+            background: var(--surface-container-highest);
+            color: var(--on-surface); padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--primary);
+            font-size: 0.875rem; font-weight: 500;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            transform: translateY(120%); opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 9999;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.error { border-left-color: var(--error); }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center; padding: 3rem;
+            color: var(--on-surface-variant);
+        }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+        .empty-state p { font-size: 0.9375rem; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="admin-sidebar">
+        <div class="admin-brand">
+            <div class="admin-brand-logo">
+                <img src="images/Gemini_Generated_Image_p5k67dp5k67dp5k6.png" alt="Logo">
+            </div>
+            <div class="admin-brand-text">
+                <span class="admin-brand-name">KalNahiAajDaan</span>
+                <span class="admin-brand-tag">Admin Panel</span>
+            </div>
+        </div>
+        <nav class="admin-nav">
+            <button class="admin-nav-link active" data-panel="dashboard"><i class='bx bx-grid-alt'></i> Dashboard</button>
+            <button class="admin-nav-link" data-panel="campaigns"><i class='bx bx-flag'></i> Campaigns</button>
+            <button class="admin-nav-link" data-panel="stories"><i class='bx bx-book-open'></i> Stories</button>
+            <button class="admin-nav-link" data-panel="volunteers"><i class='bx bx-group'></i> Volunteers</button>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <a href="index.html"><i class='bx bx-arrow-back'></i> Back to Main Site</a>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="admin-main">
+
+        <div class="admin-header">
+            <h1 id="panel-title">Dashboard Overview</h1>
+            <span class="admin-header-tag">NGO-ID #WB303</span>
+        </div>
+
+        <!-- KPI Row (always visible) -->
+        <div class="kpi-row" id="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Campaigns</div>
+                <div class="kpi-value" id="kpi-campaigns">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Total Donors</div>
+                <div class="kpi-value" id="kpi-donors">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Total Raised</div>
+                <div class="kpi-value" id="kpi-raised">₹0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Volunteers</div>
+                <div class="kpi-value" id="kpi-volunteers">0</div>
+            </div>
+        </div>
+
+        <!-- ===== DASHBOARD PANEL ===== -->
+        <div class="admin-panel active" id="panel-dashboard">
+            <div class="panel-header"><h2>Recent Activity</h2></div>
+            <table class="data-table">
+                <thead><tr>
+                    <th>Type</th><th>Details</th><th>Amount / Info</th><th>Date</th>
+                </tr></thead>
+                <tbody id="recent-activity"></tbody>
+            </table>
+        </div>
+
+        <!-- ===== CAMPAIGNS PANEL ===== -->
+        <div class="admin-panel" id="panel-campaigns">
+            <div class="panel-header">
+                <h2>Manage Campaigns</h2>
+                <button class="btn-primary" onclick="openModal('campaign')"><i class='bx bx-plus'></i> Add Campaign</button>
+            </div>
+            <table class="data-table">
+                <thead><tr>
+                    <th>Campaign</th><th>Category</th><th>Status</th><th>Goal</th><th>Raised</th><th>Donors</th><th>Days Left</th><th>Actions</th>
+                </tr></thead>
+                <tbody id="campaigns-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- ===== STORIES PANEL ===== -->
+        <div class="admin-panel" id="panel-stories">
+            <div class="panel-header">
+                <h2>Manage Stories</h2>
+                <button class="btn-primary" onclick="openModal('story')"><i class='bx bx-plus'></i> Add Story</button>
+            </div>
+            <div class="story-grid" id="stories-grid"></div>
+        </div>
+
+        <!-- ===== VOLUNTEERS PANEL ===== -->
+        <div class="admin-panel" id="panel-volunteers">
+            <div class="panel-header">
+                <h2>Volunteer Requests</h2>
+            </div>
+            <table class="data-table">
+                <thead><tr>
+                    <th>Name</th><th>Email</th><th>Phone</th><th>Interests</th><th>Date</th><th>Status</th><th>Actions</th>
+                </tr></thead>
+                <tbody id="volunteers-tbody"></tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- ===== CAMPAIGN MODAL ===== -->
+    <div class="modal-overlay" id="campaign-modal">
+        <div class="modal-box">
+            <h2 id="campaign-modal-title">Add New Campaign</h2>
+            <div class="form-group"><label>Campaign Title</label><input type="text" id="c-title" placeholder="e.g. Rural School Initiative"></div>
+            <div class="form-group"><label>Description</label><textarea id="c-desc" placeholder="Brief description of the campaign..."></textarea></div>
+            <div class="form-group"><label>Category</label>
+                <select id="c-category">
+                    <option>Education</option><option>Health</option><option>Environment</option>
+                    <option>Women Empowerment</option><option>Digital Literacy</option><option>Emergency Relief</option>
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Goal (₹)</label><input type="number" id="c-goal" placeholder="500000"></div>
+                <div class="form-group"><label>Days Left</label><input type="number" id="c-days" placeholder="45"></div>
+            </div>
+            <div class="form-group"><label>Status</label>
+                <select id="c-status">
+                    <option value="active">Active</option><option value="urgent">Urgent</option><option value="completed">Completed</option>
+                </select>
+            </div>
+            <input type="hidden" id="c-edit-id">
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('campaign')">Cancel</button>
+                <button class="btn-primary" onclick="saveCampaign()">Save Campaign</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STORY MODAL ===== -->
+    <div class="modal-overlay" id="story-modal">
+        <div class="modal-box">
+            <h2 id="story-modal-title">Add New Story</h2>
+            <div class="form-group"><label>Story Title</label><input type="text" id="s-title" placeholder="e.g. From Darkness to Light"></div>
+            <div class="form-group"><label>Subtitle</label><input type="text" id="s-subtitle" placeholder="e.g. Ravi's Education Journey"></div>
+            <div class="form-group"><label>Narrative</label><textarea id="s-narrative" placeholder="Tell the full story..."></textarea></div>
+            <div class="form-group"><label>Quote</label><input type="text" id="s-quote" placeholder="An impactful quote"></div>
+            <div class="form-group"><label>Quote Author</label><input type="text" id="s-quotee" placeholder="— Author Name"></div>
+            <input type="hidden" id="s-edit-id">
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal('story')">Cancel</button>
+                <button class="btn-primary" onclick="saveStory()">Save Story</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script src="data.js"></script>
+    <script>
+    // ============================================================
+    // KalNahiAajDaan Admin Panel — Logic
+    // ============================================================
+
+    // --- Data Layer (localStorage-backed) ---
+    function getAdminCampaigns() {
+        const stored = localStorage.getItem('admin_campaigns');
+        if (stored) return JSON.parse(stored);
+        // Seed from data.js
+        const seed = typeof CAMPAIGNS !== 'undefined' ? CAMPAIGNS.map(c => ({...c})) : [];
+        localStorage.setItem('admin_campaigns', JSON.stringify(seed));
+        return seed;
+    }
+    function saveAdminCampaigns(data) { localStorage.setItem('admin_campaigns', JSON.stringify(data)); }
+
+    function getAdminStories() {
+        const stored = localStorage.getItem('admin_stories');
+        if (stored) return JSON.parse(stored);
+        const seed = typeof STORIES !== 'undefined' ? STORIES.map(s => ({...s})) : [];
+        localStorage.setItem('admin_stories', JSON.stringify(seed));
+        return seed;
+    }
+    function saveAdminStories(data) { localStorage.setItem('admin_stories', JSON.stringify(data)); }
+
+    function getAdminVolunteers() {
+        const stored = localStorage.getItem('volunteers');
+        if (stored) return JSON.parse(stored);
+        return [];
+    }
+    function saveAdminVolunteers(data) { localStorage.setItem('volunteers', JSON.stringify(data)); }
+
+    function getDonations() {
+        const stored = localStorage.getItem('donations');
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    // --- Format helpers ---
+    function fmt(n) {
+        if (n >= 10000000) return '₹' + (n/10000000).toFixed(1) + 'Cr';
+        if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+        return '₹' + n.toLocaleString('en-IN');
+    }
+
+    // --- KPI Update ---
+    function updateKPIs() {
+        const campaigns = getAdminCampaigns();
+        const volunteers = getAdminVolunteers();
+        const donations = getDonations();
+
+        document.getElementById('kpi-campaigns').textContent = campaigns.length;
+        const totalDonors = campaigns.reduce((sum, c) => sum + (c.donors || 0), 0);
+        document.getElementById('kpi-donors').textContent = totalDonors.toLocaleString('en-IN');
+        const totalRaised = campaigns.reduce((sum, c) => sum + (c.raised || 0), 0);
+        document.getElementById('kpi-raised').textContent = fmt(totalRaised);
+        document.getElementById('kpi-volunteers').textContent = volunteers.length;
+    }
+
+    // --- Navigation ---
+    const navLinks = document.querySelectorAll('.admin-nav-link');
+    const panels = document.querySelectorAll('.admin-panel');
+    const panelTitle = document.getElementById('panel-title');
+    const titles = { dashboard: 'Dashboard Overview', campaigns: 'Campaign Management', stories: 'Stories Management', volunteers: 'Volunteer Requests' };
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            const target = link.dataset.panel;
+            panels.forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + target).classList.add('active');
+            panelTitle.textContent = titles[target] || 'Dashboard';
+        });
+    });
+
+    // --- Render Campaigns Table ---
+    function renderCampaigns() {
+        const campaigns = getAdminCampaigns();
+        const tbody = document.getElementById('campaigns-tbody');
+        if (campaigns.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bx bx-folder-open"></i><p>No campaigns yet.</p></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = campaigns.map((c, i) => `
+            <tr>
+                <td style="font-weight:600;">${c.title}</td>
+                <td>${c.category}</td>
+                <td><span class="badge badge-${c.status}">${c.status}</span></td>
+                <td>${fmt(c.goal)}</td>
+                <td>${fmt(c.raised)}</td>
+                <td>${c.donors}</td>
+                <td>${c.daysLeft}</td>
+                <td>
+                    <div class="actions-cell">
+                        <button class="btn-secondary" onclick="editCampaign(${i})"><i class='bx bx-edit'></i> Edit</button>
+                        <button class="btn-danger" onclick="deleteCampaign(${i})"><i class='bx bx-trash'></i></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // --- Render Stories ---
+    function renderStories() {
+        const stories = getAdminStories();
+        const grid = document.getElementById('stories-grid');
+        if (stories.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><i class="bx bx-book-open"></i><p>No stories yet.</p></div>';
+            return;
+        }
+        const gradients = [
+            'linear-gradient(135deg, #fb923c, #f472b6)',
+            'linear-gradient(135deg, #06b6d4, #34d399)',
+            'linear-gradient(135deg, #c084fc, #f472b6)',
+            'linear-gradient(135deg, #fbbf24, #fb923c)',
+        ];
+        grid.innerHTML = stories.map((s, i) => `
+            <div class="story-mgmt-card">
+                <div class="story-mgmt-header" style="background: ${s.gradient || gradients[i % gradients.length]}${s.image ? ', ' + s.image : ''}; background-size: cover; background-position: center; background-blend-mode: overlay;">
+                    <h3>${s.title}</h3>
+                </div>
+                <div class="story-mgmt-body">
+                    <p>${s.narrative || ''}</p>
+                    <div class="story-mgmt-actions">
+                        <button class="btn-secondary" onclick="editStory(${i})"><i class='bx bx-edit'></i> Edit</button>
+                        <button class="btn-danger" onclick="deleteStory(${i})"><i class='bx bx-trash'></i></button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // --- Render Volunteers ---
+    function renderVolunteers() {
+        const vols = getAdminVolunteers();
+        const tbody = document.getElementById('volunteers-tbody');
+        if (vols.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="bx bx-user-x"></i><p>No volunteer requests yet.</p></div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = vols.map((v, i) => {
+            const status = v.status || 'pending';
+            return `
+            <tr>
+                <td style="font-weight:600;">${v.name || 'N/A'}</td>
+                <td>${v.email || 'N/A'}</td>
+                <td>${v.phone || 'N/A'}</td>
+                <td>${(v.interests || []).join(', ') || 'N/A'}</td>
+                <td>${v.date || new Date().toLocaleDateString()}</td>
+                <td><span class="badge badge-${status}">${status}</span></td>
+                <td>
+                    <div class="actions-cell">
+                        ${status === 'pending' ? `
+                            <button class="btn-approve" onclick="updateVolStatus(${i}, 'approved')"><i class='bx bx-check'></i> Approve</button>
+                            <button class="btn-reject" onclick="updateVolStatus(${i}, 'rejected')"><i class='bx bx-x'></i> Reject</button>
+                        ` : `<span style="font-size:0.75rem;color:var(--on-surface-variant);">—</span>`}
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // --- Recent Activity ---
+    function renderRecentActivity() {
+        const donations = getDonations().slice(-8).reverse();
+        const vols = getAdminVolunteers().slice(-5).reverse();
+        const tbody = document.getElementById('recent-activity');
+        let rows = '';
+        donations.forEach(d => {
+            rows += `<tr>
+                <td><span class="badge badge-active">Donation</span></td>
+                <td>${d.name || 'Anonymous'}</td>
+                <td>${fmt(d.amount || 0)}</td>
+                <td>${d.date || '—'}</td>
+            </tr>`;
+        });
+        vols.forEach(v => {
+            rows += `<tr>
+                <td><span class="badge badge-pending">Volunteer</span></td>
+                <td>${v.name || 'N/A'}</td>
+                <td>${(v.interests || []).join(', ')}</td>
+                <td>${v.date || '—'}</td>
+            </tr>`;
+        });
+        if (!rows) rows = '<tr><td colspan="4"><div class="empty-state"><i class="bx bx-time-five"></i><p>No recent activity.</p></div></td></tr>';
+        tbody.innerHTML = rows;
+    }
+
+    // --- CRUD: Campaigns ---
+    function openModal(type) {
+        document.getElementById(type + '-modal').classList.add('show');
+    }
+    function closeModal(type) {
+        document.getElementById(type + '-modal').classList.remove('show');
+        if (type === 'campaign') {
+            document.getElementById('c-title').value = '';
+            document.getElementById('c-desc').value = '';
+            document.getElementById('c-goal').value = '';
+            document.getElementById('c-days').value = '';
+            document.getElementById('c-edit-id').value = '';
+            document.getElementById('campaign-modal-title').textContent = 'Add New Campaign';
+        }
+        if (type === 'story') {
+            document.getElementById('s-title').value = '';
+            document.getElementById('s-subtitle').value = '';
+            document.getElementById('s-narrative').value = '';
+            document.getElementById('s-quote').value = '';
+            document.getElementById('s-quotee').value = '';
+            document.getElementById('s-edit-id').value = '';
+            document.getElementById('story-modal-title').textContent = 'Add New Story';
+        }
+    }
+
+    function saveCampaign() {
+        const title = document.getElementById('c-title').value.trim();
+        if (!title) { showToast('Please enter a campaign title', true); return; }
+        const campaigns = getAdminCampaigns();
+        const editId = document.getElementById('c-edit-id').value;
+        const obj = {
+            id: editId || 'c' + Date.now(),
+            title,
+            description: document.getElementById('c-desc').value.trim(),
+            category: document.getElementById('c-category').value,
+            status: document.getElementById('c-status').value,
+            goal: parseInt(document.getElementById('c-goal').value) || 0,
+            raised: 0,
+            donors: 0,
+            daysLeft: parseInt(document.getElementById('c-days').value) || 0,
+            image: ''
+        };
+        if (editId) {
+            const idx = campaigns.findIndex(c => c.id === editId);
+            if (idx > -1) { obj.raised = campaigns[idx].raised; obj.donors = campaigns[idx].donors; obj.image = campaigns[idx].image; campaigns[idx] = obj; }
+        } else {
+            campaigns.push(obj);
+        }
+        saveAdminCampaigns(campaigns);
+        closeModal('campaign');
+        renderCampaigns(); updateKPIs();
+        showToast(editId ? 'Campaign updated!' : 'Campaign added!');
+    }
+
+    function editCampaign(idx) {
+        const campaigns = getAdminCampaigns();
+        const c = campaigns[idx];
+        document.getElementById('c-title').value = c.title;
+        document.getElementById('c-desc').value = c.description;
+        document.getElementById('c-category').value = c.category;
+        document.getElementById('c-goal').value = c.goal;
+        document.getElementById('c-days').value = c.daysLeft;
+        document.getElementById('c-status').value = c.status;
+        document.getElementById('c-edit-id').value = c.id;
+        document.getElementById('campaign-modal-title').textContent = 'Edit Campaign';
+        openModal('campaign');
+    }
+
+    function deleteCampaign(idx) {
+        if (!confirm('Delete this campaign?')) return;
+        const campaigns = getAdminCampaigns();
+        campaigns.splice(idx, 1);
+        saveAdminCampaigns(campaigns);
+        renderCampaigns(); updateKPIs();
+        showToast('Campaign deleted');
+    }
+
+    // --- CRUD: Stories ---
+    function saveStory() {
+        const title = document.getElementById('s-title').value.trim();
+        if (!title) { showToast('Please enter a story title', true); return; }
+        const stories = getAdminStories();
+        const editId = document.getElementById('s-edit-id').value;
+        const gradients = [
+            'linear-gradient(135deg, #fb923c, #f472b6)',
+            'linear-gradient(135deg, #06b6d4, #34d399)',
+            'linear-gradient(135deg, #c084fc, #f472b6)',
+        ];
+        const obj = {
+            id: editId || 's' + Date.now(),
+            title,
+            subtitle: document.getElementById('s-subtitle').value.trim(),
+            narrative: document.getElementById('s-narrative').value.trim(),
+            quote: document.getElementById('s-quote').value.trim(),
+            quotee: document.getElementById('s-quotee').value.trim(),
+            gradient: gradients[stories.length % gradients.length],
+            stats: []
+        };
+        if (editId) {
+            const idx = stories.findIndex(s => s.id === editId);
+            if (idx > -1) { obj.gradient = stories[idx].gradient; obj.image = stories[idx].image; obj.stats = stories[idx].stats; stories[idx] = obj; }
+        } else {
+            stories.push(obj);
+        }
+        saveAdminStories(stories);
+        closeModal('story');
+        renderStories(); updateKPIs();
+        showToast(editId ? 'Story updated!' : 'Story added!');
+    }
+
+    function editStory(idx) {
+        const stories = getAdminStories();
+        const s = stories[idx];
+        document.getElementById('s-title').value = s.title;
+        document.getElementById('s-subtitle').value = s.subtitle || '';
+        document.getElementById('s-narrative').value = s.narrative || '';
+        document.getElementById('s-quote').value = s.quote || '';
+        document.getElementById('s-quotee').value = s.quotee || '';
+        document.getElementById('s-edit-id').value = s.id;
+        document.getElementById('story-modal-title').textContent = 'Edit Story';
+        openModal('story');
+    }
+
+    function deleteStory(idx) {
+        if (!confirm('Delete this story?')) return;
+        const stories = getAdminStories();
+        stories.splice(idx, 1);
+        saveAdminStories(stories);
+        renderStories(); updateKPIs();
+        showToast('Story deleted');
+    }
+
+    // --- Volunteer Status ---
+    function updateVolStatus(idx, status) {
+        const vols = getAdminVolunteers();
+        vols[idx].status = status;
+        saveAdminVolunteers(vols);
+        renderVolunteers();
+        showToast(`Volunteer ${status}!`);
+    }
+
+    // --- Toast ---
+    function showToast(msg, isError) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = 'toast show' + (isError ? ' error' : '');
+        setTimeout(() => toast.className = 'toast', 3000);
+    }
+
+    // --- Close modals on overlay click ---
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('show');
+            }
+        });
+    });
+
+    // --- INIT ---
+    updateKPIs();
+    renderCampaigns();
+    renderStories();
+    renderVolunteers();
+    renderRecentActivity();
+    </script>
+</body>
+</html>
