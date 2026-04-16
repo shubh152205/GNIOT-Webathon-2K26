@@ -172,14 +172,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCampaignSelect() {
-        const select = document.getElementById('campaign-select');
-        CAMPAIGNS.filter(c => c.status !== 'completed').forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.title;
-            select.appendChild(opt);
+        const selects = [document.getElementById('campaign-select'), document.getElementById('resource-campaign-select')];
+        selects.forEach(select => {
+            if (!select) return;
+            select.innerHTML = '<option value="">— General Fund —</option>';
+            CAMPAIGNS.filter(c => c.status !== 'completed').forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.title;
+                select.appendChild(opt);
+            });
         });
     }
+
+    function updateResourceTotal() {
+        let total = 0;
+        Object.entries(resourceQuantities).forEach(([id, q]) => {
+            const cat = RESOURCE_CATEGORIES.find(r => r.id === id);
+            total += q * cat.price;
+        });
+        document.getElementById('resource-total').textContent = `₹${total.toLocaleString('en-IN')}`;
+    }
+
+    window.updateResourceQty = function(id, delta) {
+        resourceQuantities[id] = Math.max(0, (resourceQuantities[id] || 0) + delta);
+        document.getElementById(`qty-${id}`).textContent = resourceQuantities[id];
+        const card = document.querySelector(`.resource-card[data-id="${id}"]`);
+        if (resourceQuantities[id] > 0) card.classList.add('selected');
+        else card.classList.remove('selected');
+        updateResourceTotal();
+    };
 
     function renderResourceGrid() {
         const grid = document.getElementById('resource-grid');
@@ -189,24 +211,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="resource-card" data-id="${r.id}">
                     <div class="resource-icon">${r.icon}</div>
                     <div class="resource-label">${r.label}</div>
+                    <div style="font-size: 0.75rem; color: var(--primary); font-weight: 700; margin-bottom: 0.25rem;">₹${r.price.toLocaleString('en-IN')} / ${r.unit.replace(/s$/, '')}</div>
                     <div class="resource-qty">
                         <button onclick="updateResourceQty('${r.id}', -1)">−</button>
                         <span id="qty-${r.id}">0</span>
                         <button onclick="updateResourceQty('${r.id}', 1)">+</button>
                     </div>
-                    <div class="preset-label">${r.unit}</div>
                 </div>
             `;
         }).join('');
     }
-
-    window.updateResourceQty = function(id, delta) {
-        resourceQuantities[id] = Math.max(0, (resourceQuantities[id] || 0) + delta);
-        document.getElementById(`qty-${id}`).textContent = resourceQuantities[id];
-        const card = document.querySelector(`.resource-card[data-id="${id}"]`);
-        if (resourceQuantities[id] > 0) card.classList.add('selected');
-        else card.classList.remove('selected');
-    };
 
     function renderRecentDonations() {
         const list = document.getElementById('recent-donations-list');
@@ -254,6 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
         donations.push({ name, amount, campaign: campaignName, time: 'Just now' });
         localStorage.setItem('donations', JSON.stringify(donations));
 
+        // Sync with campaign
+        if (campaign) {
+            campaign.raised += amount;
+            renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
+            renderCampaignKPIs();
+        }
+
         showDonationModal(`₹${amount.toLocaleString('en-IN')} donated by ${name} to ${campaignName}. Thank you for your generosity!`);
         renderRecentDonations();
 
@@ -271,13 +292,33 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Please select at least one resource to donate.');
             return;
         }
+        
+        let totalAmount = 0;
         const name = document.getElementById('resource-donor-name').value || 'Anonymous';
         const summary = items.map(([id, q]) => {
             const cat = RESOURCE_CATEGORIES.find(r => r.id === id);
+            totalAmount += q * cat.price;
             return `${q} ${cat.unit} of ${cat.label}`;
         }).join(', ');
+        
+        const campaignId = document.getElementById('resource-campaign-select').value;
+        const campaign = CAMPAIGNS.find(c => c.id === campaignId);
+        const campaignName = campaign ? campaign.title : 'General Fund';
 
-        showDonationModal(`${name} donated ${summary}. Your contribution will reach those in need!`);
+        // Add monetary equivalent to donations and update campaign
+        const donations = JSON.parse(localStorage.getItem('donations') || '[]');
+        donations.push({ name, amount: totalAmount, campaign: campaignName + ' (Resources)', time: 'Just now' });
+        localStorage.setItem('donations', JSON.stringify(donations));
+
+        // Sync with campaign
+        if (campaign) {
+            campaign.raised += totalAmount;
+            renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
+            renderCampaignKPIs();
+        }
+
+        showDonationModal(`${name} donated ${summary} (Value: ₹${totalAmount.toLocaleString('en-IN')}) to ${campaignName}. Your contribution will reach those in need!`);
+        renderRecentDonations();
 
         // Reset
         Object.keys(resourceQuantities).forEach(id => {
@@ -285,6 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById(`qty-${id}`).textContent = '0';
         });
         document.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+        updateResourceTotal();
         document.getElementById('resource-donor-name').value = '';
     });
 

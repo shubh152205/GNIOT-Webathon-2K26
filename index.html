@@ -148,6 +148,21 @@
                     <div id="resource-mode" class="donate-mode">
                         <p class="mode-desc">Select items you'd like to donate to our centres:</p>
                         <div class="resource-grid" id="resource-grid"></div>
+                        <div class="form-group" style="background: rgba(90, 240, 179, 0.05); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+                            <div style="font-weight: 700; font-size: 1.125rem; color: var(--primary); display: flex; justify-content: space-between;">
+                                <span>Total Value:</span>
+                                <span id="resource-total">₹0</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--on-surface-variant); margin-top: 0.25rem;">
+                                This equivalent amount will be added to the selected campaign.
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="resource-campaign-select">Allocate to Campaign</label>
+                            <select id="resource-campaign-select">
+                                <option value="">— General Fund —</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label for="resource-donor-name">Your Name (optional)</label>
                             <input type="text" id="resource-donor-name" placeholder="Anonymous" class="glass-input">

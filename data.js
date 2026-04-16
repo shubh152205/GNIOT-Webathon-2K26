@@ -9,8 +9,8 @@ const CAMPAIGNS = [
         description: 'Building modern classrooms and providing quality education to 500+ children in remote villages of Uttar Pradesh.',
         category: 'Education',
         status: 'active',
-        goal: 500000,
-        raised: 320000,
+        goal: 5000000,
+        raised: 3200000,
         image: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrDkZI1BCLvkUj49Aq7cx8z38f1J0v8TOPEnrhq2fzvbDSxrhZzG28x9lyfh8nMjCFbEAgbec9v4Zgw4IvkIdrbXyEY75oikWRfIp9X7y3y2d-hOMkNDZFbP8bluXxBqfBP7rXiNJbpaEUtsrA5odpnoum2VnXBEvae6O0kP17bZjHDmY1UcAoys1NU5vDqinZbTfjBbmBAusmK-faez4sBXKA32wEMKAwZ_LWYEqAyg1YckJKSZ98pOEA4DTrU3f_Vx6H-Ea9eIQ-")',
         donors: 148,
         daysLeft: 45
@@ -21,8 +21,8 @@ const CAMPAIGNS = [
         description: 'Installing water purification systems in 15 villages to provide safe drinking water to over 10,000 people.',
         category: 'Health',
         status: 'urgent',
-        goal: 800000,
-        raised: 195000,
+        goal: 8000000,
+        raised: 1950000,
         image: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDKrpIIRoh0xUH7ZxC7pdlEPTi40mFaO1nAH8uGf9mfdm7O7Bh7C2zykhB7NNgiHlZBccOi1tgEE7Z_YRSCfwdvDQV3Gg9U9zvIrgnHMso0oRUYELlDRcgbtuCleRRIuHMkIbjWDTlE9xOvdXZuGETlvo2Rq2oQ9hBzpDDarU69cgYUzO3KXtkqPU9TSZQyDl-y0vEpI8cw3m88WR3ZMA9tPQ4xmXynjCJS3LFzQv9AYjLhv4yvQAEDFoM8GYnWKUbosWipfm64SulR")',
         donors: 87,
         daysLeft: 12
@@ -33,8 +33,8 @@ const CAMPAIGNS = [
         description: 'Empowering 200 women with tailoring, handicraft, and digital literacy skills for financial independence.',
         category: 'Women Empowerment',
         status: 'active',
-        goal: 300000,
-        raised: 275000,
+        goal: 3000000,
+        raised: 2750000,
         image: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8UxNDmACL944uK6WtvXVPpOuPiGmsDYVkCLEPRbcNo_kArLlVq7A9aZLfKX8iHqWAa3YQKwZMziN9DZEJgAT_vs7aRDtHY6CTlYLkIngnWenQnxVb8eqWDmVQ26d6XM0iq9SnV3ajRlF0QgxFtR8AfCYQpPmypvKsQMYrsfWe9NCS8PQQPh1iu0CLhwlm0yEiGCtnUyrq93l8PocfUmNpjANMFQEaFBrDeMYKxGsGHXhXx7xLbtH3syvw1aP1KxMteYe_jTgcjX1R")',
         donors: 203,
         daysLeft: 20
@@ -45,8 +45,8 @@ const CAMPAIGNS = [
         description: 'Planting 10,000 native trees across barren lands and creating community-managed green zones.',
         category: 'Environment',
         status: 'active',
-        goal: 250000,
-        raised: 180000,
+        goal: 2500000,
+        raised: 1800000,
         image: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDt5nT0MfCTAX6DM_CvmspcNGt2j-SdZy-SycmWIFkrq_1VafInYsDI_3CNYcrDJKHPzdqHDyynCG7JsBz-iqs0Yi60IzLfO7R0MQURS2FiZHjPNx8QrO6lgxECcgc7ZRtVhu19q88edOkr5NgJtQwedGwAmm6sjzukZv_RRfivTWHyrNjV78WCV5NOQd2ChQWJZhsDMr0Gtxlq329qNahuxidOQKMipwQ4XoLWSpQF7vhrmeFJh_C_jYpIL7tGfP3R_kMrf1NjJfD6")',
         donors: 312,
         daysLeft: 60
@@ -57,8 +57,8 @@ const CAMPAIGNS = [
         description: 'Organizing free health checkup camps in underserved areas covering eye, dental, and general health screenings.',
         category: 'Health',
         status: 'completed',
-        goal: 400000,
-        raised: 400000,
+        goal: 4000000,
+        raised: 4000000,
         image: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuA3eHlsqqXNn1eSHX0xFyJVB2kKd7XqoZbHZm3R57AgH9PayVpcFW0NGZaUhMSfIr6Zp0s-mL4Pf5dyF8V9nQ9DRhXIvz0PYgO3n9pPVWD69ODBGz1xk4LJ_U70i-5DNbY0pweng0eqXKz0JYOLqEG0GVFyM0m6eVd4P92j_vwOQI5HTReF2cslebL2RMZpVYJrYi0VcCzl6telVv4PF-s1izNAiAmB3A_A4t6f_ybv2Uprs-jLOE-cILZgJvvKIy-UDtFADBqU4Fot")',
         donors: 256,
         daysLeft: 0
@@ -69,8 +69,8 @@ const CAMPAIGNS = [
         description: 'Teaching basic computer skills, internet safety, and coding fundamentals to 300 rural youth.',
         category: 'Education',
         status: 'active',
-        goal: 350000,
-        raised: 120000,
+        goal: 3500000,
+        raised: 1200000,
         image: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAC5_FOhUH7IGM8BKFN3Gfr2TFJQEshr4qnGphW2mmUHx6Bs-GECAt3KLSPxMO2yoz146Fe0GR3q8x8vyHWz18Tzhoi2RZD3VcagjqXWXzZkikjqfV-MUqVY-uIH6yv40_mU8A_nuCFuDv3OTMPtOqThMxjZRCZcV9t9DnpfcrA02f8jOcdQBvZHqZbYnoHc2J6xUVE5l9hWVRrRXSsFcq-O88JrhU3io_cRk3tals3rNzQDWncn501kQ-BNcid3yn9-TlIJIQvWO9C")',
         donors: 95,
         daysLeft: 75
@@ -85,11 +85,11 @@ const DONATION_PRESETS = [
 ];
 
 const RESOURCE_CATEGORIES = [
-    { id: 'clothes',  label: 'Clothes',         icon: '👕', unit: 'pieces' },
-    { id: 'food',     label: 'Food Packets',    icon: '🥫', unit: 'packets' },
-    { id: 'books',    label: 'Books',           icon: '📖', unit: 'copies' },
-    { id: 'medical',  label: 'Medical Kits',    icon: '💊', unit: 'kits' },
-    { id: 'toys',     label: 'Toys & Games',    icon: '🧸', unit: 'items' }
+    { id: 'clothes',  label: 'Clothes',         icon: '👕', unit: 'pieces', price: 500 },
+    { id: 'food',     label: 'Food Packets',    icon: '🥫', unit: 'packets', price: 100 },
+    { id: 'books',    label: 'Books',           icon: '📖', unit: 'copies', price: 200 },
+    { id: 'medical',  label: 'Medical Kits',    icon: '💊', unit: 'kits', price: 1000 },
+    { id: 'toys',     label: 'Toys & Games',    icon: '🧸', unit: 'items', price: 300 }
 ];
 
 const STORIES = [
