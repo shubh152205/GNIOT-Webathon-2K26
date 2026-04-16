@@ -550,43 +550,33 @@
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="data.js"></script>
+    <script src="firebase-config.js"></script>
     <script>
     // ============================================================
-    // KalNahiAajDaan Admin Panel — Logic
+    // KalNahiAajDaan Admin Panel — Logic (Firebase-backed)
     // ============================================================
 
-    // --- Data Layer (localStorage-backed) ---
-    function getAdminCampaigns() {
-        const stored = localStorage.getItem('admin_campaigns');
-        if (stored) return JSON.parse(stored);
-        // Seed from data.js
-        const seed = typeof CAMPAIGNS !== 'undefined' ? CAMPAIGNS.map(c => ({...c})) : [];
-        localStorage.setItem('admin_campaigns', JSON.stringify(seed));
-        return seed;
+    // --- Data Layer (Firestore-backed) ---
+    async function getAdminCampaigns() { return await fbGetCampaigns(); }
+    async function saveAdminCampaigns(data) {
+        for (const c of data) { await fbSaveCampaign(c); }
     }
-    function saveAdminCampaigns(data) { localStorage.setItem('admin_campaigns', JSON.stringify(data)); }
 
-    function getAdminStories() {
-        const stored = localStorage.getItem('admin_stories');
-        if (stored) return JSON.parse(stored);
-        const seed = typeof STORIES !== 'undefined' ? STORIES.map(s => ({...s})) : [];
-        localStorage.setItem('admin_stories', JSON.stringify(seed));
-        return seed;
+    async function getAdminStories() { return await fbGetStories(); }
+    async function saveAdminStories(data) {
+        for (const s of data) { await fbSaveStory(s); }
     }
-    function saveAdminStories(data) { localStorage.setItem('admin_stories', JSON.stringify(data)); }
 
-    function getAdminVolunteers() {
-        const stored = localStorage.getItem('volunteers');
-        if (stored) return JSON.parse(stored);
-        return [];
+    async function getAdminVolunteers() { return await fbGetVolunteers(); }
+    async function saveAdminVolunteers(data) {
+        // Individual updates handled by fbUpdateVolunteer
     }
-    function saveAdminVolunteers(data) { localStorage.setItem('volunteers', JSON.stringify(data)); }
 
-    function getDonations() {
-        const stored = localStorage.getItem('donations');
-        return stored ? JSON.parse(stored) : [];
-    }
+    async function getDonations() { return await fbGetDonations(); }
 
     // --- Format helpers ---
     function fmt(n) {
@@ -596,10 +586,9 @@
     }
 
     // --- KPI Update ---
-    function updateKPIs() {
-        const campaigns = getAdminCampaigns();
-        const volunteers = getAdminVolunteers();
-        const donations = getDonations();
+    async function updateKPIs() {
+        const campaigns = await getAdminCampaigns();
+        const volunteers = await getAdminVolunteers();
 
         document.getElementById('kpi-campaigns').textContent = campaigns.length;
         const totalDonors = campaigns.reduce((sum, c) => sum + (c.donors || 0), 0);
@@ -627,8 +616,8 @@
     });
 
     // --- Render Campaigns Table ---
-    function renderCampaigns() {
-        const campaigns = getAdminCampaigns();
+    async function renderCampaigns() {
+        const campaigns = await getAdminCampaigns();
         const tbody = document.getElementById('campaigns-tbody');
         if (campaigns.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="bx bx-folder-open"></i><p>No campaigns yet.</p></div></td></tr>';
@@ -654,8 +643,8 @@
     }
 
     // --- Render Stories ---
-    function renderStories() {
-        const stories = getAdminStories();
+    async function renderStories() {
+        const stories = await getAdminStories();
         const grid = document.getElementById('stories-grid');
         if (stories.length === 0) {
             grid.innerHTML = '<div class="empty-state"><i class="bx bx-book-open"></i><p>No stories yet.</p></div>';
@@ -684,8 +673,8 @@
     }
 
     // --- Render Volunteers ---
-    function renderVolunteers() {
-        const vols = getAdminVolunteers();
+    async function renderVolunteers() {
+        const vols = await getAdminVolunteers();
         const tbody = document.getElementById('volunteers-tbody');
         if (vols.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="bx bx-user-x"></i><p>No volunteer requests yet.</p></div></td></tr>';
@@ -704,8 +693,8 @@
                 <td>
                     <div class="actions-cell">
                         ${status === 'pending' ? `
-                            <button class="btn-approve" onclick="updateVolStatus(${i}, 'approved')"><i class='bx bx-check'></i> Approve</button>
-                            <button class="btn-reject" onclick="updateVolStatus(${i}, 'rejected')"><i class='bx bx-x'></i> Reject</button>
+                            <button class="btn-approve" onclick="updateVolStatus('${v.id}', 'approved')"><i class='bx bx-check'></i> Approve</button>
+                            <button class="btn-reject" onclick="updateVolStatus('${v.id}', 'rejected')"><i class='bx bx-x'></i> Reject</button>
                         ` : `<span style="font-size:0.75rem;color:var(--on-surface-variant);">—</span>`}
                     </div>
                 </td>
@@ -714,9 +703,9 @@
     }
 
     // --- Recent Activity ---
-    function renderRecentActivity() {
-        const donations = getDonations().slice(-8).reverse();
-        const vols = getAdminVolunteers().slice(-5).reverse();
+    async function renderRecentActivity() {
+        const donations = (await getDonations()).slice(0, 8);
+        const vols = (await getAdminVolunteers()).slice(-5).reverse();
         const tbody = document.getElementById('recent-activity');
         let rows = '';
         donations.forEach(d => {
@@ -793,11 +782,12 @@
         }
     }
 
-    function saveCampaign() {
+    async function saveCampaign() {
         const title = document.getElementById('c-title').value.trim();
         if (!title) { showToast('Please enter a campaign title', true); return; }
-        const campaigns = getAdminCampaigns();
+        const campaigns = await getAdminCampaigns();
         const editId = document.getElementById('c-edit-id').value;
+        const imgValue = document.getElementById('c-image-data').value || document.getElementById('c-image-url').value || '';
         const obj = {
             id: editId || 'c' + Date.now(),
             title,
@@ -808,22 +798,20 @@
             raised: 0,
             donors: 0,
             daysLeft: parseInt(document.getElementById('c-days').value) || 0,
-            image: document.getElementById('c-image-data').value || document.getElementById('c-image-url').value || ''
+            image: imgValue
         };
         if (editId) {
-            const idx = campaigns.findIndex(c => c.id === editId);
-            if (idx > -1) { obj.raised = campaigns[idx].raised; obj.donors = campaigns[idx].donors; obj.image = campaigns[idx].image; campaigns[idx] = obj; }
-        } else {
-            campaigns.push(obj);
+            const existing = campaigns.find(c => c.id === editId);
+            if (existing) { obj.raised = existing.raised; obj.donors = existing.donors; if (!imgValue) obj.image = existing.image; }
         }
-        saveAdminCampaigns(campaigns);
+        await fbSaveCampaign(obj);
         closeModal('campaign');
         renderCampaigns(); updateKPIs();
         showToast(editId ? 'Campaign updated!' : 'Campaign added!');
     }
 
-    function editCampaign(idx) {
-        const campaigns = getAdminCampaigns();
+    async function editCampaign(idx) {
+        const campaigns = await getAdminCampaigns();
         const c = campaigns[idx];
         document.getElementById('c-title').value = c.title;
         document.getElementById('c-desc').value = c.description;
@@ -844,26 +832,27 @@
         openModal('campaign');
     }
 
-    function deleteCampaign(idx) {
+    async function deleteCampaign(idx) {
         if (!confirm('Delete this campaign?')) return;
-        const campaigns = getAdminCampaigns();
-        campaigns.splice(idx, 1);
-        saveAdminCampaigns(campaigns);
+        const campaigns = await getAdminCampaigns();
+        const c = campaigns[idx];
+        if (c) await fbDeleteCampaign(c.id);
         renderCampaigns(); updateKPIs();
         showToast('Campaign deleted');
     }
 
     // --- CRUD: Stories ---
-    function saveStory() {
+    async function saveStory() {
         const title = document.getElementById('s-title').value.trim();
         if (!title) { showToast('Please enter a story title', true); return; }
-        const stories = getAdminStories();
+        const stories = await getAdminStories();
         const editId = document.getElementById('s-edit-id').value;
         const gradients = [
             'linear-gradient(135deg, #fb923c, #f472b6)',
             'linear-gradient(135deg, #06b6d4, #34d399)',
             'linear-gradient(135deg, #c084fc, #f472b6)',
         ];
+        const imgValue = document.getElementById('s-image-data').value || document.getElementById('s-image-url').value || '';
         const obj = {
             id: editId || 's' + Date.now(),
             title,
@@ -871,24 +860,22 @@
             narrative: document.getElementById('s-narrative').value.trim(),
             quote: document.getElementById('s-quote').value.trim(),
             quotee: document.getElementById('s-quotee').value.trim(),
-            image: document.getElementById('s-image-data').value || document.getElementById('s-image-url').value || '',
+            image: imgValue,
             gradient: gradients[stories.length % gradients.length],
             stats: []
         };
         if (editId) {
-            const idx = stories.findIndex(s => s.id === editId);
-            if (idx > -1) { obj.gradient = stories[idx].gradient; obj.image = stories[idx].image; obj.stats = stories[idx].stats; stories[idx] = obj; }
-        } else {
-            stories.push(obj);
+            const existing = stories.find(s => s.id === editId);
+            if (existing) { obj.gradient = existing.gradient; if (!imgValue) obj.image = existing.image; obj.stats = existing.stats; }
         }
-        saveAdminStories(stories);
+        await fbSaveStory(obj);
         closeModal('story');
         renderStories(); updateKPIs();
         showToast(editId ? 'Story updated!' : 'Story added!');
     }
 
-    function editStory(idx) {
-        const stories = getAdminStories();
+    async function editStory(idx) {
+        const stories = await getAdminStories();
         const s = stories[idx];
         document.getElementById('s-title').value = s.title;
         document.getElementById('s-subtitle').value = s.subtitle || '';
@@ -908,20 +895,18 @@
         openModal('story');
     }
 
-    function deleteStory(idx) {
+    async function deleteStory(idx) {
         if (!confirm('Delete this story?')) return;
-        const stories = getAdminStories();
-        stories.splice(idx, 1);
-        saveAdminStories(stories);
+        const stories = await getAdminStories();
+        const s = stories[idx];
+        if (s) await fbDeleteStory(s.id);
         renderStories(); updateKPIs();
         showToast('Story deleted');
     }
 
     // --- Volunteer Status ---
-    function updateVolStatus(idx, status) {
-        const vols = getAdminVolunteers();
-        vols[idx].status = status;
-        saveAdminVolunteers(vols);
+    async function updateVolStatus(volId, status) {
+        await fbUpdateVolunteer(volId, { status });
         renderVolunteers();
         showToast(`Volunteer ${status}!`);
     }
@@ -943,12 +928,15 @@
         });
     });
 
-    // --- INIT ---
-    updateKPIs();
-    renderCampaigns();
-    renderStories();
-    renderVolunteers();
-    renderRecentActivity();
+    // --- INIT (async Firebase load) ---
+    async function initAdmin() {
+        await updateKPIs();
+        await renderCampaigns();
+        await renderStories();
+        await renderVolunteers();
+        await renderRecentActivity();
+    }
+    initAdmin();
     </script>
 </body>
 </html>

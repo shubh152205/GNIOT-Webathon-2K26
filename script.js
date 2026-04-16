@@ -4,25 +4,28 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── ADMIN SYNC: load campaigns & stories from admin localStorage ──
-    (function syncFromAdmin() {
-        const adminCampaigns = localStorage.getItem('admin_campaigns');
-        if (adminCampaigns) {
-            const parsed = JSON.parse(adminCampaigns);
+    // ── FIREBASE SYNC: load campaigns & stories from Firestore ──
+    async function loadFirebaseData() {
+        try {
+            const [campaigns, stories] = await Promise.all([fbGetCampaigns(), fbGetStories()]);
             CAMPAIGNS.length = 0;
-            parsed.forEach(c => CAMPAIGNS.push(c));
-        }
-        const adminStories = localStorage.getItem('admin_stories');
-        if (adminStories) {
-            const parsed = JSON.parse(adminStories);
+            campaigns.forEach(c => CAMPAIGNS.push(c));
             STORIES.length = 0;
-            parsed.forEach(s => STORIES.push(s));
+            stories.forEach(s => STORIES.push(s));
+        } catch (e) {
+            console.warn('Firebase load failed, using seed data:', e);
         }
-    })();
+    }
 
-    // Helper: persist campaign state back to admin localStorage
-    function syncCampaignsToAdmin() {
-        localStorage.setItem('admin_campaigns', JSON.stringify(CAMPAIGNS));
+    // Helper: persist campaign state back to Firestore
+    async function syncCampaignsToAdmin() {
+        try {
+            for (const c of CAMPAIGNS) {
+                await fbSaveCampaign(c);
+            }
+        } catch (e) {
+            console.warn('Firebase campaign sync failed:', e);
+        }
     }
 
     // ── SPA ROUTER ──────────────────────────────────────────────
@@ -164,27 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCampaigns(activeFilter, e.target.value);
     });
 
-    // Init campaigns
-    const storedDonations = JSON.parse(localStorage.getItem('donations') || '[]');
-    storedDonations.forEach(d => {
-        if (d.campaignId) {
-            const camp = CAMPAIGNS.find(c => c.id === d.campaignId);
-            if (camp) {
-                camp.raised += d.amount;
-                camp.donors += 1;
-            }
-        } else if (d.campaign) {
-            const exactName = d.campaign.replace(' (Resources)', '');
-            const camp = CAMPAIGNS.find(c => c.title === exactName);
-            if (camp) {
-                camp.raised += d.amount;
-                camp.donors += 1;
-            }
-        }
-    });
+    // Init campaigns — Firebase-first async load
+    async function initFromFirebase() {
+        await loadFirebaseData();
+        renderCampaignKPIs();
+        renderCampaigns();
+        renderStories();
+        renderRecentDonations();
+    }
+    initFromFirebase();
+
+    // Also render immediately with seed data (fast first paint)
     renderCampaignKPIs();
     renderCampaigns();
-    syncCampaignsToAdmin();
 
     // ── DONATE ──────────────────────────────────────────────────
     let selectedPreset = null;
@@ -261,14 +256,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    function renderRecentDonations() {
+    async function renderRecentDonations() {
         const list = document.getElementById('recent-donations-list');
-        const stored = JSON.parse(localStorage.getItem('donations') || '[]');
-        const all = [...stored.slice(-5).reverse(), ...RECENT_DONATIONS_SEED];
+        let stored = [];
+        try {
+            stored = await fbGetDonations();
+        } catch (e) {
+            stored = JSON.parse(localStorage.getItem('donations') || '[]');
+        }
+        const all = [...stored.slice(0, 5), ...RECENT_DONATIONS_SEED];
         list.innerHTML = all.slice(0, 6).map(d => `
             <div class="donation-item">
-                <span class="d-amount">₹${d.amount.toLocaleString('en-IN')}</span>
-                <span class="d-info">${d.name} • ${d.campaign} • ${d.time}</span>
+                <span class="d-amount">₹${(d.amount || 0).toLocaleString('en-IN')}</span>
+                <span class="d-info">${d.name || 'Anonymous'} • ${d.campaign || 'General'} • ${d.time || 'Recent'}</span>
             </div>
         `).join('');
     }
@@ -302,10 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaign = CAMPAIGNS.find(c => c.id === campaignId);
         const campaignName = campaign ? campaign.title : 'General Fund';
 
-        // Add monetary equivalent to donations and update campaign
-        const donations = JSON.parse(localStorage.getItem('donations') || '[]');
-        donations.push({ name, amount, campaign: campaignName, campaignId: campaign ? campaign.id : null, time: 'Just now' });
-        localStorage.setItem('donations', JSON.stringify(donations));
+        // Add donation to Firestore
+        fbAddDonation({ name, amount, campaign: campaignName, campaignId: campaign ? campaign.id : null, time: 'Just now' });
 
         // Sync with campaign
         if (campaign) {
@@ -346,10 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaign = CAMPAIGNS.find(c => c.id === campaignId);
         const campaignName = campaign ? campaign.title : 'General Fund';
 
-        // Add monetary equivalent to donations and update campaign
-        const donations = JSON.parse(localStorage.getItem('donations') || '[]');
-        donations.push({ name, amount: totalAmount, campaign: campaignName + ' (Resources)', campaignId: campaign ? campaign.id : null, time: 'Just now' });
-        localStorage.setItem('donations', JSON.stringify(donations));
+        // Add resource donation to Firestore
+        fbAddDonation({ name, amount: totalAmount, campaign: campaignName + ' (Resources)', campaignId: campaign ? campaign.id : null, time: 'Just now' });
 
         // Sync with campaign
         if (campaign) {
@@ -598,9 +594,8 @@ document.addEventListener('DOMContentLoaded', () => {
             date: new Date().toISOString()
         };
 
-        const volunteers = JSON.parse(localStorage.getItem('volunteers') || '[]');
-        volunteers.push(volunteer);
-        localStorage.setItem('volunteers', JSON.stringify(volunteers));
+        // Save volunteer to Firestore
+        fbAddVolunteer(volunteer);
 
         goToVolStep(4); // success
     });
