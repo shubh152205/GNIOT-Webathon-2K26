@@ -21,12 +21,23 @@ const db = firebase.firestore();
 async function fbGetCampaigns() {
     const snapshot = await db.collection('campaigns').get();
     if (snapshot.empty) {
-        // Seed from data.js if Firestore is empty
-        if (typeof CAMPAIGNS !== 'undefined' && CAMPAIGNS.length > 0) {
-            for (const c of CAMPAIGNS) {
-                await db.collection('campaigns').doc(c.id).set({ ...c });
+        // Migration: check if there's data in localStorage first to preserve user's work
+        let localCampaigns = null;
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem('admin_campaigns');
+            if (raw) localCampaigns = JSON.parse(raw);
+        }
+        
+        const seedData = (localCampaigns && localCampaigns.length > 0) ? localCampaigns : (typeof CAMPAIGNS !== 'undefined' ? CAMPAIGNS : []);
+        
+        if (seedData.length > 0) {
+            for (const c of seedData) {
+                // If storing Base64, hope it's < 1MiB or use compression, but for legacy migration we just push
+                try {
+                    await db.collection('campaigns').doc(c.id).set({ ...c });
+                } catch(e) { console.warn("Failed migrating campaign", c.id, e) }
             }
-            return CAMPAIGNS.map(c => ({ ...c }));
+            return seedData.map(c => ({ ...c }));
         }
         return [];
     }
@@ -45,11 +56,21 @@ async function fbDeleteCampaign(id) {
 async function fbGetStories() {
     const snapshot = await db.collection('stories').get();
     if (snapshot.empty) {
-        if (typeof STORIES !== 'undefined' && STORIES.length > 0) {
-            for (const s of STORIES) {
-                await db.collection('stories').doc(s.id).set({ ...s });
+        let localStories = null;
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem('admin_stories');
+            if (raw) localStories = JSON.parse(raw);
+        }
+        
+        const seedData = (localStories && localStories.length > 0) ? localStories : (typeof STORIES !== 'undefined' ? STORIES : []);
+        
+        if (seedData.length > 0) {
+            for (const s of seedData) {
+                try {
+                    await db.collection('stories').doc(s.id).set({ ...s });
+                } catch(e) { console.warn("Failed migrating story", s.id, e) }
             }
-            return STORIES.map(s => ({ ...s }));
+            return seedData.map(s => ({ ...s }));
         }
         return [];
     }
