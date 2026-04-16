@@ -3,63 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GNIOT Webathon 2K26 - Base Template</title>
-    <meta name="description" content="A premium boilerplate template for GNIOT Webathon 2K26 challenges with dynamic UI and glassmorphism.">
-    <!-- Google Fonts -->
+    <title>AashaDaan Foundation — NGO-ID #WB303</title>
+    <meta name="description" content="AashaDaan Foundation: Empowering communities through education, health, and sustainability. Donate, volunteer, and track real impact.">
+    <!-- Fonts: Manrope (editorial) + Plus Jakarta Sans (utility) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <!-- Stylesheet -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Boxicons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    
+
+    <!-- Ambient Background Orbs -->
     <div id="ambient-background">
         <div class="glow-orb orb-1"></div>
         <div class="glow-orb orb-2"></div>
         <div class="glow-orb orb-3"></div>
     </div>
 
-    <main class="container">
-        <header class="fade-in-up">
-            <h1 class="gradient-text">Webathon 2K26</h1>
-            <p class="subtitle">Prepare Your Solutions</p>
-        </header>
-        
-        <section class="glass-panel stagger-1">
-            <h2>Challenge Domain</h2>
-            <p>Wait for the challenges to be assigned. Your premium development boilerplate is ready.</p>
-            <div class="tags">
-                <span class="tag">HTML</span>
-                <span class="tag">CSS</span>
-                <span class="tag">JavaScript</span>
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo">🙏</div>
+            <div class="brand-text">
+                <span class="brand-name">AashaDaan</span>
+                <span class="brand-tagline">Foundation</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#campaigns" class="nav-link active" data-section="campaigns">
+                <i class='bx bx-grid-alt'></i>
+                <span>Campaigns</span>
+            </a>
+            <a href="#donate" class="nav-link" data-section="donate">
+                <i class='bx bx-heart'></i>
+                <span>Donate</span>
+            </a>
+            <a href="#stories" class="nav-link" data-section="stories">
+                <i class='bx bx-book-open'></i>
+                <span>Stories</span>
+            </a>
+            <a href="#volunteer" class="nav-link" data-section="volunteer">
+                <i class='bx bx-user-plus'></i>
+                <span>Volunteer</span>
+            </a>
+            <a href="#impact" class="nav-link" data-section="impact">
+                <i class='bx bx-bar-chart-alt-2'></i>
+                <span>Impact</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-badge">NGO-ID #WB303</div>
+        </div>
+    </aside>
+
+    <!-- ===== MOBILE TAB BAR ===== -->
+    <nav id="mobile-tab-bar">
+        <a href="#campaigns" class="tab active" data-section="campaigns"><i class='bx bx-grid-alt'></i><span>Campaigns</span></a>
+        <a href="#donate" class="tab" data-section="donate"><i class='bx bx-heart'></i><span>Donate</span></a>
+        <a href="#stories" class="tab" data-section="stories"><i class='bx bx-book-open'></i><span>Stories</span></a>
+        <a href="#volunteer" class="tab" data-section="volunteer"><i class='bx bx-user-plus'></i><span>Volunteer</span></a>
+        <a href="#impact" class="tab" data-section="impact"><i class='bx bx-bar-chart-alt-2'></i><span>Impact</span></a>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main-content">
+
+        <!-- ==================== CAMPAIGNS ==================== -->
+        <section id="section-campaigns" class="page-section active">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Campaigns Dashboard</h1>
+                    <p class="section-subtitle">Track and support our active initiatives</p>
+                </div>
+            </div>
+            <!-- Search & Filters -->
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class='bx bx-search'></i>
+                    <input type="text" id="campaign-search" placeholder="Search campaigns...">
+                </div>
+                <div class="filter-pills" id="filter-pills">
+                    <button class="pill active" data-filter="all">All</button>
+                    <button class="pill" data-filter="Education">Education</button>
+                    <button class="pill" data-filter="Health">Health</button>
+                    <button class="pill" data-filter="Environment">Environment</button>
+                    <button class="pill" data-filter="Women Empowerment">Women</button>
+                </div>
+            </div>
+            <!-- KPI Stats -->
+            <div class="kpi-row" id="campaign-kpis"></div>
+            <!-- Campaign Grid -->
+            <div class="campaign-grid" id="campaign-grid"></div>
+        </section>
+
+        <!-- ==================== DONATE ==================== -->
+        <section id="section-donate" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Make a Difference</h1>
+                    <p class="section-subtitle">Every contribution creates lasting change</p>
+                </div>
+            </div>
+            <!-- Toggle tabs -->
+            <div class="donate-tabs">
+                <button class="donate-tab active" data-mode="money" id="tab-money">💰 Monetary</button>
+                <button class="donate-tab" data-mode="resource" id="tab-resource">📦 Resources</button>
+            </div>
+            <div class="donate-layout">
+                <!-- Monetary Mode -->
+                <div class="donate-main">
+                    <div id="money-mode" class="donate-mode active">
+                        <div class="preset-grid" id="preset-grid"></div>
+                        <div class="custom-amount-wrap">
+                            <label for="custom-amount">Or enter a custom amount</label>
+                            <div class="input-with-prefix">
+                                <span class="prefix">₹</span>
+                                <input type="number" id="custom-amount" placeholder="Enter amount" min="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="campaign-select">Allocate to Campaign</label>
+                            <select id="campaign-select">
+                                <option value="">— General Fund —</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="donor-name">Your Name (optional)</label>
+                            <input type="text" id="donor-name" placeholder="Anonymous" class="glass-input">
+                        </div>
+                        <button id="donate-btn" class="primary-btn full-width">
+                            <i class='bx bx-heart'></i> Donate Now
+                        </button>
+                    </div>
+                    <!-- Resource Mode -->
+                    <div id="resource-mode" class="donate-mode">
+                        <p class="mode-desc">Select items you'd like to donate to our centres:</p>
+                        <div class="resource-grid" id="resource-grid"></div>
+                        <div class="form-group">
+                            <label for="resource-donor-name">Your Name (optional)</label>
+                            <input type="text" id="resource-donor-name" placeholder="Anonymous" class="glass-input">
+                        </div>
+                        <button id="resource-donate-btn" class="primary-btn full-width">
+                            <i class='bx bx-package'></i> Submit Donation
+                        </button>
+                    </div>
+                </div>
+                <!-- Recent Donations Sidebar -->
+                <div class="donate-sidebar">
+                    <h3>Recent Donations</h3>
+                    <div class="recent-donations-list" id="recent-donations-list"></div>
+                </div>
             </div>
         </section>
 
-        <section class="glass-panel stagger-2">
-            <h2>Evaluation Criteria</h2>
-            <ul class="criteria-list">
-                <li>
-                    <span class="icon">✨</span>
-                    <p><strong>UI/UX Design:</strong> Focus on modern aesthetics, responsiveness, and glassmorphism.</p>
-                </li>
-                <li>
-                    <span class="icon">⚡</span>
-                    <p><strong>Performance:</strong> Fast execution, clean code, and zero lag.</p>
-                </li>
-                <li>
-                    <span class="icon">💡</span>
-                    <p><strong>Innovation:</strong> Bring creative solutions to the given domain.</p>
-                </li>
-            </ul>
+        <!-- ==================== STORIES ==================== -->
+        <section id="section-stories" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Impact Stories</h1>
+                    <p class="section-subtitle">Real lives, real change</p>
+                </div>
+            </div>
+            <div class="stories-carousel-wrap">
+                <button class="carousel-arrow left" id="story-prev"><i class='bx bx-chevron-left'></i></button>
+                <div class="stories-viewport" id="stories-viewport"></div>
+                <button class="carousel-arrow right" id="story-next"><i class='bx bx-chevron-right'></i></button>
+            </div>
+            <div class="story-dots" id="story-dots"></div>
         </section>
 
-        <footer class="stagger-3">
-            <button id="start-btn" class="primary-btn">Start Coding</button>
-            <p class="footer-note">Build from scratch • Team Effort</p>
-        </footer>
+        <!-- ==================== VOLUNTEER ==================== -->
+        <section id="section-volunteer" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Join Our Mission</h1>
+                    <p class="section-subtitle">Your time and skills can transform lives</p>
+                </div>
+            </div>
+            <div class="volunteer-layout">
+                <div class="volunteer-form-wrap">
+                    <!-- Progress Stepper -->
+                    <div class="stepper">
+                        <div class="step active" data-step="1"><span class="step-num">1</span><span class="step-label">Personal Info</span></div>
+                        <div class="step-line"></div>
+                        <div class="step" data-step="2"><span class="step-num">2</span><span class="step-label">Interests</span></div>
+                        <div class="step-line"></div>
+                        <div class="step" data-step="3"><span class="step-num">3</span><span class="step-label">Availability</span></div>
+                    </div>
+                    <!-- Step 1 -->
+                    <div class="vol-step active" id="vol-step-1">
+                        <div class="form-group">
+                            <label><i class='bx bx-user'></i> Full Name</label>
+                            <input type="text" id="vol-name" placeholder="Enter your full name" class="glass-input" required>
+                            <span class="error-msg" id="err-name"></span>
+                        </div>
+                        <div class="form-group">
+                            <label><i class='bx bx-envelope'></i> Email</label>
+                            <input type="email" id="vol-email" placeholder="you@example.com" class="glass-input" required>
+                            <span class="error-msg" id="err-email"></span>
+                        </div>
+                        <div class="form-group">
+                            <label><i class='bx bx-phone'></i> Phone</label>
+                            <input type="tel" id="vol-phone" placeholder="+91 XXXXX XXXXX" class="glass-input" required>
+                            <span class="error-msg" id="err-phone"></span>
+                        </div>
+                        <button class="primary-btn" id="vol-next-1">Next <i class='bx bx-right-arrow-alt'></i></button>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="vol-step" id="vol-step-2">
+                        <p class="step-desc">Select your areas of interest:</p>
+                        <div class="interest-grid" id="interest-grid"></div>
+                        <div class="step-btns">
+                            <button class="secondary-btn" id="vol-prev-2"><i class='bx bx-left-arrow-alt'></i> Back</button>
+                            <button class="primary-btn" id="vol-next-2">Next <i class='bx bx-right-arrow-alt'></i></button>
+                        </div>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="vol-step" id="vol-step-3">
+                        <p class="step-desc">When are you available?</p>
+                        <div class="day-toggles" id="day-toggles">
+                            <button class="day-toggle" data-day="Mon">Mon</button>
+                            <button class="day-toggle" data-day="Tue">Tue</button>
+                            <button class="day-toggle" data-day="Wed">Wed</button>
+                            <button class="day-toggle" data-day="Thu">Thu</button>
+                            <button class="day-toggle" data-day="Fri">Fri</button>
+                            <button class="day-toggle" data-day="Sat">Sat</button>
+                            <button class="day-toggle" data-day="Sun">Sun</button>
+                        </div>
+                        <div class="time-prefs">
+                            <label class="time-chip"><input type="checkbox" value="Morning"> 🌅 Morning</label>
+                            <label class="time-chip"><input type="checkbox" value="Afternoon"> ☀️ Afternoon</label>
+                            <label class="time-chip"><input type="checkbox" value="Evening"> 🌙 Evening</label>
+                        </div>
+                        <div class="step-btns">
+                            <button class="secondary-btn" id="vol-prev-3"><i class='bx bx-left-arrow-alt'></i> Back</button>
+                            <button class="primary-btn" id="vol-submit">Submit <i class='bx bx-check'></i></button>
+                        </div>
+                    </div>
+                    <!-- Success -->
+                    <div class="vol-step" id="vol-step-success">
+                        <div class="success-anim">
+                            <div class="checkmark-circle">
+                                <i class='bx bx-check'></i>
+                            </div>
+                            <h2>Welcome Aboard! 🎉</h2>
+                            <p>Thank you for joining AashaDaan Foundation. We'll contact you shortly with your first assignment.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Motivational Panel -->
+                <div class="volunteer-info-panel glass-card">
+                    <div class="vol-stat">
+                        <span class="vol-stat-number">500+</span>
+                        <span class="vol-stat-label">Active Volunteers</span>
+                    </div>
+                    <div class="vol-testimonial">
+                        <p class="quote-text">"Volunteering with AashaDaan was the best decision of my life. Teaching kids in rural schools every weekend gives me purpose."</p>
+                        <p class="quote-author">— Meera Joshi, Volunteer since 2022</p>
+                    </div>
+                    <div class="vol-avatars">
+                        <div class="avatar" style="background: linear-gradient(135deg, #38bdf8, #818cf8);">A</div>
+                        <div class="avatar" style="background: linear-gradient(135deg, #34d399, #a3e635);">P</div>
+                        <div class="avatar" style="background: linear-gradient(135deg, #f472b6, #c084fc);">R</div>
+                        <div class="avatar" style="background: linear-gradient(135deg, #fb923c, #fbbf24);">S</div>
+                        <div class="avatar more">+496</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== IMPACT ==================== -->
+        <section id="section-impact" class="page-section">
+            <div class="section-header">
+                <div>
+                    <h1 class="section-title">Our Impact</h1>
+                    <p class="section-subtitle">Making a measurable difference</p>
+                </div>
+            </div>
+            <!-- KPI Row -->
+            <div class="impact-kpis" id="impact-kpis"></div>
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-panel glass-card">
+                    <h3>Monthly Funding (₹ Lakhs)</h3>
+                    <div class="bar-chart" id="bar-chart"></div>
+                </div>
+                <div class="chart-panel glass-card">
+                    <h3>Fund Allocation</h3>
+                    <div class="donut-wrap">
+                        <div class="donut-chart" id="donut-chart"></div>
+                        <div class="donut-legend" id="donut-legend"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Timeline -->
+            <div class="timeline-section glass-card">
+                <h3>Key Milestones</h3>
+                <div class="timeline" id="timeline"></div>
+            </div>
+            <!-- Live ticker -->
+            <div class="live-ticker" id="live-ticker">
+                <div class="ticker-label"><i class='bx bx-broadcast'></i> Live</div>
+                <div class="ticker-track" id="ticker-track"></div>
+            </div>
+        </section>
+
     </main>
 
+    <!-- ===== DONATION MODAL ===== -->
+    <div class="modal-overlay" id="donation-modal">
+        <div class="modal glass-card">
+            <div class="confetti-container" id="confetti-container"></div>
+            <div class="modal-icon">🎉</div>
+            <h2>Thank You!</h2>
+            <p id="modal-message">Your donation has been received.</p>
+            <button class="primary-btn" id="modal-close">Close</button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
