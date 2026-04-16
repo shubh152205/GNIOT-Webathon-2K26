@@ -144,6 +144,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Init campaigns
+    const storedDonations = JSON.parse(localStorage.getItem('donations') || '[]');
+    storedDonations.forEach(d => {
+        if (d.campaignId) {
+            const camp = CAMPAIGNS.find(c => c.id === d.campaignId);
+            if (camp) {
+                camp.raised += d.amount;
+                camp.donors += 1;
+            }
+        } else if (d.campaign) {
+            const exactName = d.campaign.replace(' (Resources)', '');
+            const camp = CAMPAIGNS.find(c => c.title === exactName);
+            if (camp) {
+                camp.raised += d.amount;
+                camp.donors += 1;
+            }
+        }
+    });
     renderCampaignKPIs();
     renderCampaigns();
 
@@ -263,14 +280,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const campaign = CAMPAIGNS.find(c => c.id === campaignId);
         const campaignName = campaign ? campaign.title : 'General Fund';
 
-        // Save to localStorage
+        // Add monetary equivalent to donations and update campaign
         const donations = JSON.parse(localStorage.getItem('donations') || '[]');
-        donations.push({ name, amount, campaign: campaignName, time: 'Just now' });
+        donations.push({ name, amount, campaign: campaignName, campaignId: campaign ? campaign.id : null, time: 'Just now' });
         localStorage.setItem('donations', JSON.stringify(donations));
 
         // Sync with campaign
         if (campaign) {
             campaign.raised += amount;
+            campaign.donors += 1;
             renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
             renderCampaignKPIs();
         }
@@ -307,12 +325,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add monetary equivalent to donations and update campaign
         const donations = JSON.parse(localStorage.getItem('donations') || '[]');
-        donations.push({ name, amount: totalAmount, campaign: campaignName + ' (Resources)', time: 'Just now' });
+        donations.push({ name, amount: totalAmount, campaign: campaignName + ' (Resources)', campaignId: campaign ? campaign.id : null, time: 'Just now' });
         localStorage.setItem('donations', JSON.stringify(donations));
 
         // Sync with campaign
         if (campaign) {
             campaign.raised += totalAmount;
+            campaign.donors += 1;
             renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
             renderCampaignKPIs();
         }
