@@ -5,55 +5,24 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ── ADMIN SYNC: load campaigns & stories from admin localStorage ──
-    // ── FIREBASE SYNC: load campaigns & stories from Cloud Firestore ──
-    async function initFirebaseSync() {
-        if (!window.fb) return;
-        const { db, collection, onSnapshot, getDocs, setDoc, doc } = window.fb;
-
-        // 1. Hook into Campaigns
-        onSnapshot(collection(db, "campaigns"), (snapshot) => {
-            const remoteCampaigns = [];
-            snapshot.forEach(doc => remoteCampaigns.push({ ...doc.data(), id: doc.id }));
-            
-            if (remoteCampaigns.length > 0) {
-                CAMPAIGNS.length = 0;
-                remoteCampaigns.forEach(c => CAMPAIGNS.push(c));
-                renderCampaigns();
-                renderCampaignKPIs();
-            } else {
-                // If DB is empty, seed it with data.js values
-                CAMPAIGNS.forEach(c => setDoc(doc(db, "campaigns", c.id), c));
-            }
-        });
-
-        // 2. Hook into Stories
-        onSnapshot(collection(db, "stories"), (snapshot) => {
-            const remoteStories = [];
-            snapshot.forEach(doc => remoteStories.push({ ...doc.data(), id: doc.id }));
-            
-            if (remoteStories.length > 0) {
-                STORIES.length = 0;
-                remoteStories.forEach(s => STORIES.push(s));
-                renderStories();
-            } else {
-                // Seed stories
-                STORIES.forEach((s, idx) => setDoc(doc(db, "stories", s.id || 's'+idx), s));
-            }
-        });
-    }
-    initFirebaseSync();
-
-    // Helper: persist campaign state back to Firestore
-    async function syncCampaignsToAdmin(campaign) {
-        if (!window.fb) return;
-        const { db, doc, updateDoc, increment } = window.fb;
-        if (campaign && campaign.id) {
-            const campRef = doc(db, "campaigns", campaign.id);
-            await updateDoc(campRef, {
-                raised: campaign.raised,
-                donors: campaign.donors
-            });
+    (function syncFromAdmin() {
+        const adminCampaigns = localStorage.getItem('admin_campaigns');
+        if (adminCampaigns) {
+            const parsed = JSON.parse(adminCampaigns);
+            CAMPAIGNS.length = 0;
+            parsed.forEach(c => CAMPAIGNS.push(c));
         }
+        const adminStories = localStorage.getItem('admin_stories');
+        if (adminStories) {
+            const parsed = JSON.parse(adminStories);
+            STORIES.length = 0;
+            parsed.forEach(s => STORIES.push(s));
+        }
+    })();
+
+    // Helper: persist campaign state back to admin localStorage
+    function syncCampaignsToAdmin() {
+        localStorage.setItem('admin_campaigns', JSON.stringify(CAMPAIGNS));
     }
 
     // ── SPA ROUTER ──────────────────────────────────────────────
@@ -348,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showDonationModal(`₹${amount.toLocaleString('en-IN')} donated by ${name} to ${campaignName}. Thank you for your generosity!`);
         renderRecentDonations();
-        syncCampaignsToAdmin(campaign); // Pass the updated campaign object to Firestore
+        syncCampaignsToAdmin();
 
         // Reset
         selectedPreset = null;
@@ -387,7 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
             campaign.raised += totalAmount;
             campaign.donors += 1;
             renderCampaigns(document.querySelector('.pill.active')?.dataset.filter || 'all', document.getElementById('campaign-search').value);
-        syncCampaignsToAdmin(campaign); // Pass updated campaign object to Firestore
+            renderCampaignKPIs();
+        }
+        syncCampaignsToAdmin();
 
         showDonationModal(`${name} donated ${summary} (Value: ₹${totalAmount.toLocaleString('en-IN')}) to ${campaignName}. Your contribution will reach those in need!`);
         renderRecentDonations();
@@ -627,10 +598,9 @@ document.addEventListener('DOMContentLoaded', () => {
             date: new Date().toISOString()
         };
 
-        if (window.fb) {
-            const { db, collection, setDoc, doc } = window.fb;
-            setDoc(doc(db, "volunteers", volunteer.id), volunteer);
-        }
+        const volunteers = JSON.parse(localStorage.getItem('volunteers') || '[]');
+        volunteers.push(volunteer);
+        localStorage.setItem('volunteers', JSON.stringify(volunteers));
 
         goToVolStep(4); // success
     });
@@ -707,14 +677,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTicker() {
         const track = document.getElementById('ticker-track');
-        // Use recent documents from campaigns for a live ticker effect
-        const latestDonations = CAMPAIGNS.flatMap(c => c.recentDonations || []).sort((a,b) => b.timestamp - a.timestamp);
-        latestDonations.slice(0, 5).forEach(d => {
+        const donations = JSON.parse(localStorage.getItem('donations') || '[]');
+        const volunteers = JSON.parse(localStorage.getItem('volunteers') || '[]');
+        const items = [];
+
+        donations.slice(-5).forEach(d => {
             items.push(`💚 ${d.name} donated ₹${d.amount.toLocaleString('en-IN')} to ${d.campaign}`);
         });
-        
-        const latestVols = (window.VOLUNTEERS || []).slice(-3).reverse();
-        latestVols.forEach(v => {
+        volunteers.slice(-3).forEach(v => {
             items.push(`🤝 ${v.name} joined as a volunteer`);
         });
 

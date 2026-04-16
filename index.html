@@ -12,26 +12,6 @@
     <!-- Boxicons -->
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- Firebase SDK (v10) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDqXZKf5Wmg7cxMn4z-OzBH116MmPrAddw",
-            authDomain: "kalnahiaajdaan-shubh-152205.firebaseapp.com",
-            projectId: "kalnahiaajdaan-shubh-152205",
-            storageBucket: "kalnahiaajdaan-shubh-152205.firebasestorage.app",
-            messagingSenderId: "438589238825",
-            appId: "1:438589238825:web:ca12e298ed3255054a7638"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Expose to window for external scripts
-        window.fb = { db, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot, increment, arrayUnion };
-    </script>
 </head>
 <body>
 

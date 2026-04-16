@@ -8,26 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <!-- Firebase SDK (v10) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDqXZKf5Wmg7cxMn4z-OzBH116MmPrAddw",
-            authDomain: "kalnahiaajdaan-shubh-152205.firebaseapp.com",
-            projectId: "kalnahiaajdaan-shubh-152205",
-            storageBucket: "kalnahiaajdaan-shubh-152205.firebasestorage.app",
-            messagingSenderId: "438589238825",
-            appId: "1:438589238825:web:ca12e298ed3255054a7638"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Expose to window for external scripts
-        window.fb = { db, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot, increment, arrayUnion };
-    </script>
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -576,68 +556,36 @@
     // KalNahiAajDaan Admin Panel — Logic
     // ============================================================
 
-    // --- Data Layer (Firestore-backed) ---
-    async function initFirebaseSync() {
-        if (!window.fb) return;
-        const { db, collection, onSnapshot, getDocs, setDoc, doc } = window.fb;
-
-        // Sync Campaigns
-        onSnapshot(collection(db, "campaigns"), (snapshot) => {
-            CAMPAIGNS.length = 0;
-            snapshot.forEach(doc => CAMPAIGNS.push({ ...doc.data(), id: doc.id }));
-            renderCampaigns();
-            updateKPIs();
-            renderRecentActivity();
-        });
-
-        // Sync Stories
-        onSnapshot(collection(db, "stories"), (snapshot) => {
-            STORIES.length = 0;
-            snapshot.forEach(doc => STORIES.push({ ...doc.data(), id: doc.id }));
-            renderStories();
-        });
-
-        // Sync Volunteers
-        onSnapshot(collection(db, "volunteers"), (snapshot) => {
-            const vols = [];
-            snapshot.forEach(doc => vols.push({ ...doc.data(), id: doc.id }));
-            window.VOLUNTEERS = vols; // Global for this session
-            renderVolunteers();
-            updateKPIs();
-            renderRecentActivity();
-        });
+    // --- Data Layer (localStorage-backed) ---
+    function getAdminCampaigns() {
+        const stored = localStorage.getItem('admin_campaigns');
+        if (stored) return JSON.parse(stored);
+        // Seed from data.js
+        const seed = typeof CAMPAIGNS !== 'undefined' ? CAMPAIGNS.map(c => ({...c})) : [];
+        localStorage.setItem('admin_campaigns', JSON.stringify(seed));
+        return seed;
     }
-    initFirebaseSync();
+    function saveAdminCampaigns(data) { localStorage.setItem('admin_campaigns', JSON.stringify(data)); }
 
-    function getAdminCampaigns() { return CAMPAIGNS; }
-    function saveAdminCampaigns(campaign) {
-        if (!window.fb) return;
-        const { db, doc, setDoc } = window.fb;
-        setDoc(doc(db, "campaigns", campaign.id), campaign);
+    function getAdminStories() {
+        const stored = localStorage.getItem('admin_stories');
+        if (stored) return JSON.parse(stored);
+        const seed = typeof STORIES !== 'undefined' ? STORIES.map(s => ({...s})) : [];
+        localStorage.setItem('admin_stories', JSON.stringify(seed));
+        return seed;
     }
+    function saveAdminStories(data) { localStorage.setItem('admin_stories', JSON.stringify(data)); }
 
-    function getAdminStories() { return STORIES; }
-    function saveAdminStories(story) {
-        if (!window.fb) return;
-        const { db, doc, setDoc } = window.fb;
-        setDoc(doc(db, "stories", story.id), story);
+    function getAdminVolunteers() {
+        const stored = localStorage.getItem('volunteers');
+        if (stored) return JSON.parse(stored);
+        return [];
     }
-
-    function getAdminVolunteers() { return window.VOLUNTEERS || []; }
-    async function updateVolStatus(idx, status) {
-        const vols = getAdminVolunteers();
-        const v = vols[idx];
-        if (v && v.id && window.fb) {
-            const { db, doc, updateDoc } = window.fb;
-            await updateDoc(doc(db, "volunteers", v.id), { status: status });
-            showToast(`Volunteer ${status}!`);
-        }
-    }
+    function saveAdminVolunteers(data) { localStorage.setItem('volunteers', JSON.stringify(data)); }
 
     function getDonations() {
-        // Donations are still local or we should sync them too?
-        // Let's sync Recent Activity too via Firestore for full "virtual" feel
-        return []; 
+        const stored = localStorage.getItem('donations');
+        return stored ? JSON.parse(stored) : [];
     }
 
     // --- Format helpers ---
@@ -649,14 +597,14 @@
 
     // --- KPI Update ---
     function updateKPIs() {
-        const campaigns = CAMPAIGNS;
+        const campaigns = getAdminCampaigns();
         const volunteers = getAdminVolunteers();
-        // For total raised/donors, we sum from campaigns
-        const totalDonors = campaigns.reduce((sum, c) => sum + (c.donors || 0), 0);
-        const totalRaised = campaigns.reduce((sum, c) => sum + (c.raised || 0), 0);
+        const donations = getDonations();
 
         document.getElementById('kpi-campaigns').textContent = campaigns.length;
+        const totalDonors = campaigns.reduce((sum, c) => sum + (c.donors || 0), 0);
         document.getElementById('kpi-donors').textContent = totalDonors.toLocaleString('en-IN');
+        const totalRaised = campaigns.reduce((sum, c) => sum + (c.raised || 0), 0);
         document.getElementById('kpi-raised').textContent = fmt(totalRaised);
         document.getElementById('kpi-volunteers').textContent = volunteers.length;
     }
@@ -868,8 +816,9 @@
         } else {
             campaigns.push(obj);
         }
-        saveAdminCampaigns(obj);
+        saveAdminCampaigns(campaigns);
         closeModal('campaign');
+        renderCampaigns(); updateKPIs();
         showToast(editId ? 'Campaign updated!' : 'Campaign added!');
     }
 
@@ -895,28 +844,16 @@
         openModal('campaign');
     }
 
-    async function deleteCampaign(idx) {
+    function deleteCampaign(idx) {
         if (!confirm('Delete this campaign?')) return;
         const campaigns = getAdminCampaigns();
-        const c = campaigns[idx];
-        if (c && c.id && window.fb) {
-            const { db, doc, deleteDoc } = window.fb;
-            await deleteDoc(doc(db, "campaigns", c.id));
-            showToast('Campaign deleted');
-        }
+        campaigns.splice(idx, 1);
+        saveAdminCampaigns(campaigns);
+        renderCampaigns(); updateKPIs();
+        showToast('Campaign deleted');
     }
 
     // --- CRUD: Stories ---
-    async function deleteStory(idx) {
-        if (!confirm('Delete this story?')) return;
-        const stories = getAdminStories();
-        const s = stories[idx];
-        if (s && s.id && window.fb) {
-            const { db, doc, deleteDoc } = window.fb;
-            await deleteDoc(doc(db, "stories", s.id));
-            showToast('Story deleted');
-        }
-    }
     function saveStory() {
         const title = document.getElementById('s-title').value.trim();
         if (!title) { showToast('Please enter a story title', true); return; }
@@ -944,8 +881,9 @@
         } else {
             stories.push(obj);
         }
-        saveAdminStories(obj);
+        saveAdminStories(stories);
         closeModal('story');
+        renderStories(); updateKPIs();
         showToast(editId ? 'Story updated!' : 'Story added!');
     }
 
