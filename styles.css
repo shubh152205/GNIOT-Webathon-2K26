@@ -1070,7 +1070,7 @@ label, .label { font-family: var(--font-utility); font-weight: 500; font-size: 0
 }
 
 /* === CONTACT / EMAIL FOOTER (MINIMAL) === */
-.contact-footer-section { display: block !important; }
+.contact-footer-section { display: block !important; margin-top: 3rem; }
 .contact-footer {
     padding: 1.25rem 1.5rem;
     border: 1px solid rgba(90,240,179,0.12);
