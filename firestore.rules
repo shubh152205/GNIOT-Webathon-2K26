@@ -2,20 +2,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /campaigns/{campaignId} {
-      allow read: true;
-      allow write: true;
+      allow read: if true;
+      allow write: if true;
     }
     match /stories/{storyId} {
-      allow read: true;
-      allow write: true;
+      allow read: if true;
+      allow write: if true;
     }
     match /donations/{donationId} {
-      allow read: true;
-      allow write: true;
+      allow read: if true;
+      allow write: if true;
     }
     match /volunteers/{volunteerId} {
-      allow read: true;
-      allow write: true;
+      allow read: if true;
+      allow write: if true;
     }
   }
 }
