@@ -35,7 +35,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 3000000,
         raised: 2750000,
-        image: "url('images/img6.jpeg')",
+        image: "url('images/img5.jpeg')",
         donors: 203,
         daysLeft: 20
     },
@@ -47,7 +47,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 2500000,
         raised: 1800000,
-        image: "url('images/img5.jpeg')",
+        image: "url('images/img4.jpeg')",
         donors: 312,
         daysLeft: 60
     },
@@ -71,7 +71,7 @@ const CAMPAIGNS = [
         status: 'active',
         goal: 3500000,
         raised: 1200000,
-        image: "url('images/img4.jpeg')",
+        image: "url('images/img6.jpeg')",
         donors: 95,
         daysLeft: 75
     }
