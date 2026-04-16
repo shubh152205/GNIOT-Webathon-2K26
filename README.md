@@ -7,7 +7,10 @@ This repository contains the boilerplate template ready to be developed during t
 
 - `index.html`: Main HTML file with SEO best practices and semantic structure.
 - `styles.css`: Premium baseline styling featuring a dark theme, modern typography (Inter), glassmorphism, and responsive design.
-- `script.js`: Core JavaScript logic with basic examples of DOM manipulation and smooth intersection observer animations.
+- `script.js`: Core JavaScript logic with Firebase Firestore integration for global data synchronization.
+- `firebase-config.js`: Handles secure connection to the Cloud Firestore backend.
+- `admin.html`: Decoupled admin panel for real-time campaign, story, and volunteer management.
+- `data.js`: Initial seed data used to populate the cloud database on first run.
 
 ## Getting Started
 
